@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Marges et paddings -->
+    <dimen name="margin_xs">4dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">16dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
+    <dimen name="margin_xl">32dp</dimen>
+
+    <dimen name="padding_xs">4dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+
+    <!-- Tailles des cartes -->
+    <dimen name="card_corner_radius">8dp</dimen>
+    <dimen name="card_elevation">4dp</dimen>
+
+    <!-- Tailles des boutons -->
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="icon_button_size">48dp</dimen>
+
+    <!-- Tailles des images -->
+    <dimen name="food_image_height">120dp</dimen>
+    <dimen name="recipe_image_height">200dp</dimen>
+    <dimen name="thumbnail_size">64dp</dimen>
+
+    <!-- Espacements spécifiques -->
+    <dimen name="list_item_spacing">8dp</dimen>
+    <dimen name="section_spacing">24dp</dimen>
+
+    <!-- Tailles de texte personnalisées -->
+    <dimen name="text_size_micro">10sp</dimen>
+    <dimen name="text_size_tiny">12sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_large">18sp</dimen>
+    <dimen name="text_size_xl">20sp</dimen>
+
+    <!-- Hauteurs de composants -->
+    <dimen name="app_bar_height">56dp</dimen>
+    <dimen name="tab_height">48dp</dimen>
+    <dimen name="bottom_nav_height">56dp</dimen>
+</resources>

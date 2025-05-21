@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Planificateur de Repas</string>
+
+    <!-- Titres de navigation -->
+    <string name="title_meal_plan">Planning</string>
+    <string name="title_food_search">Aliments</string>
+    <string name="title_recipes">Recettes</string>
+    <string name="title_nutrition">Nutrition</string>
+    <string name="title_profile">Profil</string>
+
+    <!-- Titres de fragments -->
+    <string name="title_food_details">Détails de l\'aliment</string>
+    <string name="title_add_food">Ajouter un aliment</string>
+    <string name="title_recipe_details">Détails de la recette</string>
+    <string name="title_add_recipe">Créer une recette</string>
+    <string name="title_add_meal">Ajouter un repas</string>
+    <string name="title_meal_details">Détails du repas</string>
+
+    <!-- Boutons et actions -->
+    <string name="action_save">Enregistrer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_edit">Modifier</string>
+    <string name="action_add">Ajouter</string>
+    <string name="action_search">Rechercher</string>
+    <string name="action_favorite">Favoris</string>
+    <string name="action_unfavorite">Retirer des favoris</string>
+
+    <!-- Messages -->
+    <string name="msg_loading">Chargement…</string>
+    <string name="msg_no_data">Aucune donnée disponible</string>
+    <string name="msg_error">Une erreur s\'est produite</string>
+    <string name="msg_sync_complete">Synchronisation terminée</string>
+    <string name="msg_confirm_delete">Voulez-vous vraiment supprimer cet élément ?</string>
+
+    <!-- Étiquettes de formulaire -->
+    <string name="label_name">Nom</string>
+    <string name="label_age">Âge</string>
+    <string name="label_gender">Genre</string>
+    <string name="label_weight">Poids (kg)</string>
+    <string name="label_height">Taille (cm)</string>
+    <string name="label_goal">Objectif</string>
+    <string name="label_activity_level">Niveau d\'activité</string>
+    <string name="label_calories">Calories</string>
+    <string name="label_protein">Protéines (g)</string>
+    <string name="label_carbs">Glucides (g)</string>
+    <string name="label_fat">Lipides (g)</string>
+    <string name="label_fiber">Fibres (g)</string>
+    <string name="label_sugar">Sucre (g)</string>
+    <string name="label_meal_type">Type de repas</string>
+    <string name="label_meal_time">Heure du repas</string>
+    <string name="label_quantity">Quantité</string>
+    <string name="label_serving_size">Portion</string>
+    <string name="label_serving_unit">Unité</string>
+    <string name="label_preparation_time">Temps de préparation</string>
+    <string name="label_cooking_time">Temps de cuisson</string>
+    <string name="label_servings">Nombre de portions</string>
+    <string name="label_description">Description</string>
+    <string name="label_instructions">Instructions</string>
+    <string name="label_ingredients">Ingrédients</string>
+    <string name="label_tags">Tags</string>
+    <string name="label_notes">Notes</string>
+
+    <!-- Types de repas -->
+    <string name="meal_type_breakfast">Petit-déjeuner</string>
+    <string name="meal_type_lunch">Déjeuner</string>
+    <string name="meal_type_dinner">Dîner</string>
+    <string name="meal_type_snack">Collation</string>
+
+    <!-- Objectifs nutritionnels -->
+    <string name="goal_weight_loss">Perte de poids</string>
+    <string name="goal_weight_gain">Prise de poids</string>
+    <string name="goal_maintenance">Maintien du poids</string>
+    <string name="goal_muscle_gain">Prise de muscle</string>
+
+    <!-- Niveaux d\'activité -->
+    <string name="activity_sedentary">Sédentaire</string>
+    <string name="activity_lightly_active">Légèrement actif</string>
+    <string name="activity_moderately_active">Modérément actif</string>
+    <string name="activity_very_active">Très actif</string>
+    <string name="activity_extremely_active">Extrêmement actif</string>
+
+    <!-- Noms des jours de la semaine -->
+    <string name="day_monday">Lundi</string>
+    <string name="day_tuesday">Mardi</string>
+    <string name="day_wednesday">Mercredi</string>
+    <string name="day_thursday">Jeudi</string>
+    <string name="day_friday">Vendredi</string>
+    <string name="day_saturday">Samedi</string>
+    <string name="day_sunday">Dimanche</string>
+
+</resources>
