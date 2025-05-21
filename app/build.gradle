@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'com.google.devtools.ksp' version '1.8.0-1.0.9'
+    id 'com.google.devtools.ksp'
     id 'dagger.hilt.android.plugin'
     id 'androidx.navigation.safeargs.kotlin'
 }
@@ -64,7 +64,6 @@ dependencies {
     // Room
     implementation 'androidx.room:room-runtime:2.6.0'
     implementation 'androidx.room:room-ktx:2.6.0'
-    implementation libs.androidx.hilt.common
     ksp 'androidx.room:room-compiler:2.6.0'
 
     // Retrofit
@@ -81,6 +80,9 @@ dependencies {
 
     // WorkManager
     implementation 'androidx.work:work-runtime-ktx:2.8.1'
+    // Ajout de Hilt integration pour WorkManager
+    implementation 'androidx.hilt:hilt-work:1.1.0'
+    ksp 'androidx.hilt:hilt-compiler:1.1.0'
 
     // Image Loading
     implementation 'com.github.bumptech.glide:glide:4.16.0'
