@@ -16,10 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-
+        // Ajout de JitPack pour MPAndroidChart
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
 rootProject.name = "MealPlanner"
 include(":app")
- 
