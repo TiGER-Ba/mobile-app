@@ -57,14 +57,14 @@ class MealPlanRepository @Inject constructor(
         mealType: MealType,
         time: Long,
         name: String = "",
-        notes: String = ""
+        notes: String = ""  // Ajout du paramètre notes
     ): String {
         val meal = Meal(
             mealPlanId = mealPlanId,
             type = mealType,
             time = time,
             name = name,
-            notes = notes
+            notes = notes  // Utilisation du paramètre notes
         )
         mealDao.insertMeal(meal)
         return meal.id

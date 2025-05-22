@@ -1,5 +1,6 @@
 package com.example.mealplanner.data.model
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
@@ -33,11 +34,12 @@ data class RecipeIngredient(
     val unit: String
 )
 
+// CORRECTION : Utilisation correcte des annotations Room
 data class RecipeWithIngredients(
+    @Embedded val recipe: Recipe,
     @Relation(
         parentColumn = "id",
         entityColumn = "recipeId"
     )
-    val recipe: Recipe,
     val ingredients: List<RecipeIngredient>
 )

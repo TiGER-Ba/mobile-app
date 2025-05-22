@@ -124,7 +124,7 @@ class MealPlanViewModel @Inject constructor(
         }
     }
 
-    fun addMeal(type: MealType, time: Long, name: String = "") {
+    fun addMeal(type: MealType, time: Long, name: String = "", notes: String = "") {
         viewModelScope.launch {
             try {
                 val mealPlanId = _currentMealPlan.value?.id
@@ -134,7 +134,8 @@ class MealPlanViewModel @Inject constructor(
                     mealPlanId = mealPlanId,
                     mealType = type,
                     time = time,
-                    name = name
+                    name = name,
+                    notes = notes  // Ajout du paramètre notes
                 )
 
                 _message.value = "Repas ajouté"

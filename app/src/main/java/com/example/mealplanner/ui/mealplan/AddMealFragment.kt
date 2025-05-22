@@ -155,7 +155,7 @@ class AddMealFragment : Fragment() {
         val name = binding.editTextName.text.toString()
         val notes = binding.editTextNotes.text.toString()
 
-        // Ajouter le repas
+        // Ajouter le repas avec tous les paramètres
         viewModel.currentMealPlan.value?.let { mealPlan ->
             viewModel.addMeal(
                 type = mealType,

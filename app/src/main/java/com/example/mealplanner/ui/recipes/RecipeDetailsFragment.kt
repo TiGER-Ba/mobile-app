@@ -57,8 +57,13 @@ class RecipeDetailsFragment : Fragment() {
 
     private fun setupButtons() {
         binding.buttonEditRecipe.setOnClickListener {
-            val action = RecipeDetailsFragmentDirections.actionRecipeDetailsToAddRecipe(args.recipeId)
-            findNavController().navigate(action)
+            // CORRECTION : Navigation avec findNavController().navigate()
+            findNavController().navigate(
+                R.id.navigation_add_recipe,
+                Bundle().apply {
+                    putString("recipeId", args.recipeId)
+                }
+            )
         }
 
         binding.buttonDeleteRecipe.setOnClickListener {
