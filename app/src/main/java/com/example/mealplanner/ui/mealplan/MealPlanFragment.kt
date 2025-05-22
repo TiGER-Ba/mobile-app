@@ -13,7 +13,6 @@ import com.example.mealplanner.R
 import com.example.mealplanner.databinding.FragmentMealPlanBinding
 import com.google.android.material.datepicker.MaterialDatePicker
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,6 +43,9 @@ class MealPlanFragment : Fragment() {
         setupMealsList()
         setupAddMealButton()
         observeViewModel()
+
+        // CORRECTION : Initialiser avec la date actuelle
+        viewModel.selectDate(System.currentTimeMillis())
     }
 
     private fun setupDateSelector() {

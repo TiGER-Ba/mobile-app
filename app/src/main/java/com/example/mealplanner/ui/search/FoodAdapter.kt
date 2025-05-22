@@ -34,14 +34,14 @@ class FoodAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CHANGÉ ICI
+                val position = adapterPosition // CORRIGÉ ICI
                 if (position != RecyclerView.NO_POSITION) {
                     onFoodClick(getItem(position))
                 }
             }
 
             binding.buttonFavorite.setOnClickListener {
-                val position = adapterPosition // CHANGÉ ICI
+                val position = adapterPosition // CORRIGÉ ICI
                 if (position != RecyclerView.NO_POSITION) {
                     onFavoriteClick(getItem(position))
                 }

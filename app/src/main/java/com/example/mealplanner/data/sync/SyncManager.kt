@@ -1,6 +1,7 @@
 package com.example.mealplanner.data.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
@@ -13,36 +14,77 @@ class SyncManager @Inject constructor(
 ) {
     companion object {
         private const val SYNC_WORK_NAME = "meal_planner_sync_work"
+        private const val TAG = "SyncManager"
     }
 
     fun setupPeriodicSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        try {
+            Log.d(TAG, "Démarrage de la configuration de la synchronisation périodique")
 
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
-            repeatInterval = 15,
-            repeatIntervalTimeUnit = TimeUnit.MINUTES
-        )
-            .setConstraints(constraints)
-            .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+                .build()
 
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            SYNC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE,
-            syncRequest
-        )
+            val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
+                repeatInterval = 15,
+                repeatIntervalTimeUnit = TimeUnit.MINUTES
+            )
+                .setConstraints(constraints)
+                .setBackoffCriteria(
+                    BackoffPolicy.LINEAR,
+                    10000L, // 10 secondes
+                    TimeUnit.MILLISECONDS
+                )
+                .build()
+
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueueUniquePeriodicWork(
+                SYNC_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE, // CORRIGÉ : UPDATE au lieu de REPLACE
+                syncRequest
+            )
+
+            Log.d(TAG, "Synchronisation périodique configurée avec succès")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors de la configuration de la synchronisation périodique", e)
+            // Ne pas faire planter l'application si la sync échoue
+        }
     }
 
     fun triggerImmediateSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        try {
+            Log.d(TAG, "Déclenchement d'une synchronisation immédiate")
 
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
 
-        WorkManager.getInstance(context).enqueue(syncRequest)
+            val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setConstraints(constraints)
+                .setBackoffCriteria(
+                    BackoffPolicy.LINEAR,
+                    10000L, // 10 secondes
+                    TimeUnit.MILLISECONDS
+                )
+                .build()
+
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueue(syncRequest)
+
+            Log.d(TAG, "Synchronisation immédiate déclenchée avec succès")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors du déclenchement de la synchronisation immédiate", e)
+        }
+    }
+
+    fun cancelSync() {
+        try {
+            val workManager = WorkManager.getInstance(context)
+            workManager.cancelUniqueWork(SYNC_WORK_NAME)
+            Log.d(TAG, "Synchronisation annulée")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors de l'annulation de la synchronisation", e)
+        }
     }
 }

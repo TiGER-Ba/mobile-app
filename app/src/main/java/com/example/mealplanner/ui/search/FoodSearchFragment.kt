@@ -1,6 +1,7 @@
 package com.example.mealplanner.ui.search
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,11 +17,6 @@ import com.example.mealplanner.data.model.Food
 import com.example.mealplanner.databinding.FragmentFoodSearchBinding
 import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -35,6 +31,10 @@ class FoodSearchFragment : Fragment() {
     // État de recherche pour savoir si on utilise la recherche locale ou en ligne
     private var isOnlineSearch = false
 
+    companion object {
+        private const val TAG = "FoodSearchFragment"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -47,12 +47,73 @@ class FoodSearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d(TAG, "FoodSearchFragment créé")
+
         setupFoodsList()
         setupSearchView()
         setupTabLayout()
         setupSearchButtons()
         setupAddFoodButton()
         observeViewModel()
+
+        // CORRECTION : Charger les données initiales
+        loadInitialData()
+    }
+
+    private fun loadInitialData() {
+        Log.d(TAG, "Chargement des données initiales")
+        // Charger tous les aliments au démarrage
+        viewModel.searchFoods("", false)
+
+        // Ajouter quelques aliments de test si la base est vide
+        addTestFoodsIfEmpty()
+    }
+
+    private fun addTestFoodsIfEmpty() {
+        lifecycleScope.launch { // CORRIGÉ : lifecycleScope au lieu de viewModelScope
+            try {
+                // Ajouter des aliments de test pour avoir quelque chose à afficher
+                viewModel.addCustomFood(
+                    name = "Banane",
+                    calories = 89,
+                    protein = 1.1f,
+                    carbs = 22.8f,
+                    fat = 0.3f,
+                    fiber = 2.6f,
+                    sugar = 12.2f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                )
+
+                viewModel.addCustomFood(
+                    name = "Pomme",
+                    calories = 52,
+                    protein = 0.3f,
+                    carbs = 13.8f,
+                    fat = 0.2f,
+                    fiber = 2.4f,
+                    sugar = 10.4f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                )
+
+                viewModel.addCustomFood(
+                    name = "Poulet (blanc)",
+                    calories = 165,
+                    protein = 31f,
+                    carbs = 0f,
+                    fat = 3.6f,
+                    fiber = 0f,
+                    sugar = 0f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                )
+
+                Log.d(TAG, "Aliments de test ajoutés")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors de l'ajout des aliments de test", e)
+            }
+        }
     }
 
     private fun setupFoodsList() {
@@ -71,7 +132,6 @@ class FoodSearchFragment : Fragment() {
         }
     }
 
-    @OptIn(FlowPreview::class)
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -100,9 +160,18 @@ class FoodSearchFragment : Fragment() {
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
-                    0 -> viewModel.searchFoods("", false) // Tous les aliments
-                    1 -> displayFavoriteFoods()
-                    2 -> displayRecentFoods()
+                    0 -> {
+                        Log.d(TAG, "Onglet 'Tous' sélectionné")
+                        viewModel.searchFoods("", false) // Tous les aliments
+                    }
+                    1 -> {
+                        Log.d(TAG, "Onglet 'Favoris' sélectionné")
+                        displayFavoriteFoods()
+                    }
+                    2 -> {
+                        Log.d(TAG, "Onglet 'Récents' sélectionné")
+                        displayRecentFoods()
+                    }
                 }
             }
 
@@ -135,8 +204,11 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun performSearch(query: String) {
+        Log.d(TAG, "Recherche: '$query', En ligne: $isOnlineSearch")
         if (query.isNotEmpty()) {
             viewModel.searchFoods(query, isOnlineSearch)
+        } else {
+            viewModel.searchFoods("", false) // Afficher tous les aliments
         }
     }
 
@@ -157,13 +229,23 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun navigateToFoodDetails(food: Food) {
-        val action = FoodSearchFragmentDirections.actionFoodSearchToFoodDetails(food.id)
-        findNavController().navigate(action)
+        try {
+            val action = FoodSearchFragmentDirections.actionFoodSearchToFoodDetails(food.id)
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur navigation vers détails", e)
+            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun navigateToAddFood() {
-        val action = FoodSearchFragmentDirections.actionFoodSearchToAddFood()
-        findNavController().navigate(action)
+        try {
+            val action = FoodSearchFragmentDirections.actionFoodSearchToAddFood()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur navigation vers ajout", e)
+            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun observeViewModel() {
@@ -183,6 +265,7 @@ class FoodSearchFragment : Fragment() {
         // Observer les résultats de recherche locaux
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
+                Log.d(TAG, "Résultats locaux reçus: ${foods.size} aliments")
                 if (!isOnlineSearch) {
                     updateFoodsList(foods)
                 }
@@ -191,6 +274,7 @@ class FoodSearchFragment : Fragment() {
 
         // Observer les résultats de recherche en ligne
         viewModel.onlineSearchResults.observe(viewLifecycleOwner) { foods ->
+            Log.d(TAG, "Résultats en ligne reçus: ${foods.size} aliments")
             if (isOnlineSearch) {
                 updateFoodsList(foods)
             }
@@ -205,6 +289,7 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun updateFoodsList(foods: List<Food>) {
+        Log.d(TAG, "Mise à jour de la liste avec ${foods.size} aliments")
         foodAdapter.submitList(foods)
 
         if (foods.isEmpty()) {

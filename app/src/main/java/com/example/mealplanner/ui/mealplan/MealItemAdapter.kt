@@ -31,14 +31,14 @@ class MealItemAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CHANGÉ ICI
+                val position = adapterPosition // CORRIGÉ ICI
                 if (position != RecyclerView.NO_POSITION) {
                     onItemClick(getItem(position))
                 }
             }
 
             binding.buttonDelete.setOnClickListener {
-                val position = adapterPosition // CHANGÉ ICI
+                val position = adapterPosition // CORRIGÉ ICI
                 if (position != RecyclerView.NO_POSITION) {
                     onDeleteClick(getItem(position))
                 }

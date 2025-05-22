@@ -1,6 +1,7 @@
 package com.example.mealplanner.di
 
 import android.content.Context
+import androidx.work.WorkManager
 import com.example.mealplanner.data.api.ApiClient
 import com.example.mealplanner.data.api.NutritionApiService
 import com.example.mealplanner.data.database.AppDatabase
@@ -68,5 +69,11 @@ object AppModule {
     @Singleton
     fun provideNutritionApiService(): NutritionApiService {
         return ApiClient.nutritionService
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 }

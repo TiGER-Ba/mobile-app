@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme -->
-    <style name="Theme.MealPlanner" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <!-- Base application theme - MODE CLAIR UNIQUEMENT -->
+    <style name="Theme.MealPlanner" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Primary brand color -->
         <item name="colorPrimary">@color/primary_green</item>
         <item name="colorPrimaryVariant">@color/primary_green_dark</item>
@@ -12,11 +12,23 @@
         <item name="colorSecondaryVariant">@color/accent_orange_dark</item>
         <item name="colorOnSecondary">@color/black</item>
 
+        <!-- Background colors -->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+
+        <!-- Text colors -->
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+
         <!-- Status bar color -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
 
-        <!-- Background colors -->
-        <item name="android:windowBackground">@color/background_light</item>
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o">true</item>
 
         <!-- Error color -->
         <item name="colorError">@color/error_red</item>
@@ -27,12 +39,12 @@
         <item name="cardCornerRadius">@dimen/card_corner_radius</item>
         <item name="cardElevation">@dimen/card_elevation</item>
         <item name="android:layout_margin">@dimen/margin_medium</item>
-        <item name="cardBackgroundColor">@color/background_card</item>
+        <item name="cardBackgroundColor">@color/white</item>
     </style>
 
     <!-- Style pour les titres de section -->
     <style name="SectionTitleStyle" parent="TextAppearance.MaterialComponents.Headline6">
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">@color/black</item>
         <item name="android:textStyle">bold</item>
         <item name="android:layout_marginTop">@dimen/margin_large</item>
         <item name="android:layout_marginBottom">@dimen/margin_small</item>
@@ -49,6 +61,7 @@
         <item name="android:layout_height">@dimen/button_height</item>
         <item name="android:layout_margin">@dimen/margin_medium</item>
         <item name="backgroundTint">@color/primary_green</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 
     <!-- Style pour les boutons de texte -->
@@ -61,6 +74,7 @@
         <item name="android:layout_marginTop">@dimen/margin_medium</item>
         <item name="boxStrokeColor">@color/primary_green</item>
         <item name="hintTextColor">@color/primary_green</item>
+        <item name="android:textColorHint">@color/text_hint</item>
     </style>
 
     <!-- Style pour les progress bars -->
@@ -73,8 +87,20 @@
     <style name="DividerStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
-        <item name="android:background">?android:attr/listDivider</item>
+        <item name="android:background">@color/text_hint</item>
         <item name="android:layout_marginTop">@dimen/margin_medium</item>
         <item name="android:layout_marginBottom">@dimen/margin_medium</item>
+    </style>
+
+    <!-- Style pour les champs de texte -->
+    <style name="EditTextStyle">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="android:background">@color/white</item>
+    </style>
+
+    <!-- Style pour les TextView -->
+    <style name="TextViewStyle">
+        <item name="android:textColor">@color/black</item>
     </style>
 </resources>

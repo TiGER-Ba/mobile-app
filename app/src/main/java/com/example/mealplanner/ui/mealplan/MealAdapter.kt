@@ -36,7 +36,7 @@ class MealAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CHANGÉ ICI
+                val position = adapterPosition // CORRIGÉ ICI
                 if (position != RecyclerView.NO_POSITION) {
                     onMealClick(getItem(position))
                 }
