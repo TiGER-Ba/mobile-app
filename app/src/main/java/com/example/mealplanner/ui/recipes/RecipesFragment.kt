@@ -216,8 +216,10 @@ class RecipesFragment : Fragment() {
     private fun observeAllRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.allRecipes.collect { recipes ->
-                Log.d(TAG, "Recettes reçues: ${recipes.size}")
-                updateRecipesList(recipes)
+                if (isAdded && !isDetached) {
+                    Log.d(TAG, "Recettes reçues: ${recipes.size}")
+                    updateRecipesList(recipes)
+                }
             }
         }
     }
@@ -225,13 +227,17 @@ class RecipesFragment : Fragment() {
     private fun observeFavoriteRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.favoriteRecipes.collect { recipes ->
-                Log.d(TAG, "Recettes favorites reçues: ${recipes.size}")
-                updateRecipesList(recipes)
+                if (isAdded && !isDetached) {
+                    Log.d(TAG, "Recettes favorites reçues: ${recipes.size}")
+                    updateRecipesList(recipes)
+                }
             }
         }
     }
 
     private fun updateRecipesList(recipes: List<Recipe>) {
+        if (!isAdded || isDetached) return
+
         recipeAdapter.submitList(recipes)
 
         if (recipes.isEmpty()) {

@@ -34,7 +34,7 @@ class MealPlanViewModel @Inject constructor(
         private const val TAG = "MealPlanViewModel"
     }
 
-    // Date sélectionnée
+    // Date sélectionnée - CORRECTION : Initialiser avec la date actuelle
     private val _selectedDate = MutableStateFlow(System.currentTimeMillis())
     val selectedDate: StateFlow<Long> = _selectedDate
 
@@ -58,8 +58,29 @@ class MealPlanViewModel @Inject constructor(
     private val _mealItems = MutableStateFlow<List<MealItemDetails>>(emptyList())
     val mealItems: StateFlow<List<MealItemDetails>> = _mealItems
 
+    // État d'initialisation
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized
+
+    init {
+        Log.d(TAG, "🔧 Initialisation du MealPlanViewModel")
+        // Charger automatiquement le plan pour aujourd'hui
+        viewModelScope.launch {
+            try {
+                val today = System.currentTimeMillis()
+                Log.d(TAG, "📅 Initialisation avec la date d'aujourd'hui: $today")
+                selectDate(today)
+                _isInitialized.value = true
+                Log.d(TAG, "✅ ViewModel initialisé avec succès")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Erreur lors de l'initialisation", e)
+                _message.value = "Erreur d'initialisation: ${e.message}"
+            }
+        }
+    }
+
     fun selectDate(date: Long) {
-        Log.d(TAG, "Sélection de la date: $date")
+        Log.d(TAG, "📅 Sélection de la date: $date")
         _selectedDate.value = date
         loadMealPlanForSelectedDate()
     }
@@ -67,28 +88,34 @@ class MealPlanViewModel @Inject constructor(
     private fun loadMealPlanForSelectedDate() {
         viewModelScope.launch {
             try {
-                Log.d(TAG, "Chargement du plan de repas pour la date: ${_selectedDate.value}")
-                val mealPlan = mealPlanRepository.getMealPlanForDate(_selectedDate.value)
+                val selectedDate = _selectedDate.value
+                Log.d(TAG, "🔄 Chargement du plan de repas pour la date: $selectedDate")
+
+                val mealPlan = mealPlanRepository.getMealPlanForDate(selectedDate)
                 _currentMealPlan.value = mealPlan
+                Log.d(TAG, "📋 Plan de repas chargé: ${mealPlan.id}")
 
                 // Charger les repas pour ce plan
                 mealPlanRepository.getMealsForMealPlan(mealPlan.id)
                     .catch { e ->
-                        Log.e(TAG, "Erreur lors du chargement des repas", e)
+                        Log.e(TAG, "❌ Erreur lors du chargement des repas", e)
                         _message.value = "Erreur lors du chargement des repas"
+                        _mealsForCurrentPlan.value = emptyList()
                     }
                     .collect { meals ->
-                        Log.d(TAG, "Repas chargés: ${meals.size}")
+                        Log.d(TAG, "🍽️ Repas chargés: ${meals.size}")
                         _mealsForCurrentPlan.value = meals
                     }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors du chargement du plan", e)
+                Log.e(TAG, "❌ Erreur lors du chargement du plan", e)
                 _message.value = "Erreur lors du chargement du plan: ${e.message}"
+                _mealsForCurrentPlan.value = emptyList()
             }
         }
     }
 
     fun selectMeal(mealId: String?) {
+        Log.d(TAG, "🍽️ Sélection du repas: $mealId")
         _selectedMealId.value = mealId
         if (mealId != null) {
             loadMealItems(mealId)
@@ -100,12 +127,15 @@ class MealPlanViewModel @Inject constructor(
     private fun loadMealItems(mealId: String) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🔄 Chargement des items pour le repas: $mealId")
                 mealPlanRepository.getMealItemsForMeal(mealId)
                     .catch { e ->
-                        Log.e(TAG, "Erreur lors du chargement des items", e)
+                        Log.e(TAG, "❌ Erreur lors du chargement des items", e)
                         _message.value = "Erreur lors du chargement des items"
+                        _mealItems.value = emptyList()
                     }
                     .collect { items ->
+                        Log.d(TAG, "🥘 Items chargés: ${items.size}")
                         val detailedItems = items.mapNotNull { item ->
                             // Pour chaque item, récupérer les détails de l'aliment ou de la recette
                             if (item.foodId != null) {
@@ -118,7 +148,10 @@ class MealPlanViewModel @Inject constructor(
                                         name = food.name,
                                         calories = calculateFoodCalories(food, item.quantity, item.servingSize)
                                     )
-                                } else null
+                                } else {
+                                    Log.w(TAG, "⚠️ Aliment non trouvé: ${item.foodId}")
+                                    null
+                                }
                             } else if (item.recipeId != null) {
                                 val recipe = recipeRepository.getRecipeById(item.recipeId)
                                 if (recipe != null) {
@@ -129,14 +162,21 @@ class MealPlanViewModel @Inject constructor(
                                         name = recipe.name,
                                         calories = calculateRecipeCalories(recipe, item.quantity)
                                     )
-                                } else null
-                            } else null
+                                } else {
+                                    Log.w(TAG, "⚠️ Recette non trouvée: ${item.recipeId}")
+                                    null
+                                }
+                            } else {
+                                Log.w(TAG, "⚠️ Item sans aliment ni recette: ${item.id}")
+                                null
+                            }
                         }
                         _mealItems.value = detailedItems
                     }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors du chargement des items", e)
+                Log.e(TAG, "❌ Erreur lors du chargement des items", e)
                 _message.value = "Erreur lors du chargement des items: ${e.message}"
+                _mealItems.value = emptyList()
             }
         }
     }
@@ -144,6 +184,7 @@ class MealPlanViewModel @Inject constructor(
     fun addMeal(type: MealType, time: Long, name: String = "", notes: String = "") {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "➕ Ajout d'un repas: $type à $time")
                 val mealPlanId = _currentMealPlan.value?.id
                     ?: mealPlanRepository.getMealPlanForDate(_selectedDate.value).id
 
@@ -158,10 +199,12 @@ class MealPlanViewModel @Inject constructor(
                 _message.value = "Repas ajouté avec succès"
                 selectMeal(mealId) // Sélectionner le nouveau repas
 
+                Log.d(TAG, "✅ Repas ajouté: $mealId")
+
                 // Recharger la liste des repas
                 loadMealPlanForSelectedDate()
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de l'ajout du repas", e)
+                Log.e(TAG, "❌ Erreur lors de l'ajout du repas", e)
                 _message.value = "Erreur lors de l'ajout du repas: ${e.message}"
             }
         }
@@ -170,6 +213,7 @@ class MealPlanViewModel @Inject constructor(
     fun updateMeal(mealId: String, type: MealType, time: Long, name: String, notes: String) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🔄 Mise à jour du repas: $mealId")
                 val meal = mealPlanRepository.getMealById(mealId)
                 if (meal != null) {
                     val updated = meal.copy(
@@ -181,12 +225,16 @@ class MealPlanViewModel @Inject constructor(
                     )
                     mealPlanRepository.updateMeal(updated)
                     _message.value = "Repas mis à jour"
+                    Log.d(TAG, "✅ Repas mis à jour")
 
                     // Recharger la liste des repas
                     loadMealPlanForSelectedDate()
+                } else {
+                    Log.w(TAG, "⚠️ Repas non trouvé pour mise à jour: $mealId")
+                    _message.value = "Repas non trouvé"
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de la mise à jour", e)
+                Log.e(TAG, "❌ Erreur lors de la mise à jour", e)
                 _message.value = "Erreur lors de la mise à jour: ${e.message}"
             }
         }
@@ -195,17 +243,22 @@ class MealPlanViewModel @Inject constructor(
     fun deleteMeal(mealId: String) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🗑️ Suppression du repas: $mealId")
                 val meal = mealPlanRepository.getMealById(mealId)
                 if (meal != null) {
                     mealPlanRepository.deleteMeal(meal)
                     _message.value = "Repas supprimé"
                     selectMeal(null) // Désélectionner
+                    Log.d(TAG, "✅ Repas supprimé")
 
                     // Recharger la liste des repas
                     loadMealPlanForSelectedDate()
+                } else {
+                    Log.w(TAG, "⚠️ Repas non trouvé pour suppression: $mealId")
+                    _message.value = "Repas non trouvé"
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de la suppression", e)
+                Log.e(TAG, "❌ Erreur lors de la suppression", e)
                 _message.value = "Erreur lors de la suppression: ${e.message}"
             }
         }
@@ -214,6 +267,7 @@ class MealPlanViewModel @Inject constructor(
     fun addFoodToMeal(mealId: String, foodId: String, quantity: Float, servingSize: Float) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🥘 Ajout d'aliment au repas: $foodId -> $mealId")
                 mealPlanRepository.addItemToMeal(
                     mealId = mealId,
                     foodId = foodId,
@@ -222,11 +276,12 @@ class MealPlanViewModel @Inject constructor(
                     servingSize = servingSize
                 )
                 _message.value = "Aliment ajouté au repas"
+                Log.d(TAG, "✅ Aliment ajouté")
 
                 // Recharger les items du repas
                 loadMealItems(mealId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de l'ajout", e)
+                Log.e(TAG, "❌ Erreur lors de l'ajout", e)
                 _message.value = "Erreur lors de l'ajout: ${e.message}"
             }
         }
@@ -235,6 +290,7 @@ class MealPlanViewModel @Inject constructor(
     fun addRecipeToMeal(mealId: String, recipeId: String, servings: Float) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "👨‍🍳 Ajout de recette au repas: $recipeId -> $mealId")
                 mealPlanRepository.addItemToMeal(
                     mealId = mealId,
                     foodId = null,
@@ -243,11 +299,12 @@ class MealPlanViewModel @Inject constructor(
                     servingSize = 1f // Pour les recettes, on utilise le nombre de portions
                 )
                 _message.value = "Recette ajoutée au repas"
+                Log.d(TAG, "✅ Recette ajoutée")
 
                 // Recharger les items du repas
                 loadMealItems(mealId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de l'ajout", e)
+                Log.e(TAG, "❌ Erreur lors de l'ajout", e)
                 _message.value = "Erreur lors de l'ajout: ${e.message}"
             }
         }
@@ -256,6 +313,7 @@ class MealPlanViewModel @Inject constructor(
     fun updateMealItem(mealItem: MealItem, quantity: Float, servingSize: Float) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🔄 Mise à jour item repas: ${mealItem.id}")
                 val updated = mealItem.copy(
                     quantity = quantity,
                     servingSize = servingSize,
@@ -263,11 +321,12 @@ class MealPlanViewModel @Inject constructor(
                 )
                 mealPlanRepository.updateMealItem(updated)
                 _message.value = "Item mis à jour"
+                Log.d(TAG, "✅ Item mis à jour")
 
                 // Recharger les items du repas
                 _selectedMealId.value?.let { loadMealItems(it) }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de la mise à jour", e)
+                Log.e(TAG, "❌ Erreur lors de la mise à jour", e)
                 _message.value = "Erreur lors de la mise à jour: ${e.message}"
             }
         }
@@ -276,17 +335,22 @@ class MealPlanViewModel @Inject constructor(
     fun deleteMealItem(mealItemId: String) {
         viewModelScope.launch {
             try {
+                Log.d(TAG, "🗑️ Suppression item repas: $mealItemId")
                 val mealItems = _mealItems.value
                 val item = mealItems.find { it.item.id == mealItemId }?.item
                 if (item != null) {
                     mealPlanRepository.removeMealItem(item)
                     _message.value = "Item supprimé"
+                    Log.d(TAG, "✅ Item supprimé")
 
                     // Recharger les items du repas
                     _selectedMealId.value?.let { loadMealItems(it) }
+                } else {
+                    Log.w(TAG, "⚠️ Item non trouvé pour suppression: $mealItemId")
+                    _message.value = "Item non trouvé"
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de la suppression", e)
+                Log.e(TAG, "❌ Erreur lors de la suppression", e)
                 _message.value = "Erreur lors de la suppression: ${e.message}"
             }
         }

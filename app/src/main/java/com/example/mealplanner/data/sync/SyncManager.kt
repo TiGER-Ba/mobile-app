@@ -41,7 +41,7 @@ class SyncManager @Inject constructor(
             val workManager = WorkManager.getInstance(context)
             workManager.enqueueUniquePeriodicWork(
                 SYNC_WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE, // CORRIGÉ : UPDATE au lieu de REPLACE
+                ExistingPeriodicWorkPolicy.REPLACE, // CORRECTION : Utilisation de REPLACE qui est standard
                 syncRequest
             )
 

@@ -3,25 +3,17 @@ package com.example.mealplanner
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.example.mealplanner.data.sync.SyncManager
 import com.example.mealplanner.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
-    @Inject
-    lateinit var syncManager: SyncManager
 
     companion object {
         private const val TAG = "MainActivity"
@@ -30,114 +22,115 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Log.d(TAG, "=== DÉMARRAGE DE L'APPLICATION MEAL PLANNER ===")
+        Log.d(TAG, "🟢 MainActivity onCreate - DÉBUT")
 
         try {
-            // Initialiser le binding
+            // ÉTAPE 1: Initialiser le binding
             binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
-            Log.d(TAG, "✅ Binding initialisé avec succès")
+            Log.d(TAG, "✅ ÉTAPE 1: Binding créé")
 
-            // Configurer la navigation
-            setupNavigation()
-            Log.d(TAG, "✅ Navigation configurée avec succès")
+            // ÉTAPE 2: Configuration de base de la navigation
+            setupBasicNavigation()
+            Log.d(TAG, "✅ ÉTAPE 2: Navigation configurée")
 
-            // Configurer la synchronisation (avec délai pour éviter les erreurs)
-            setupSyncWithDelay()
-            Log.d(TAG, "✅ Synchronisation programmée")
+            Log.d(TAG, "🎉 MainActivity onCreate - SUCCÈS COMPLET")
 
-            Log.d(TAG, "=== APPLICATION DÉMARRÉE AVEC SUCCÈS ===")
         } catch (e: Exception) {
-            Log.e(TAG, "❌ ERREUR CRITIQUE lors du démarrage", e)
-            // Ne pas faire crash l'application, continuer avec une configuration minimale
-            try {
-                setupMinimalConfiguration()
-            } catch (fallbackError: Exception) {
-                Log.e(TAG, "❌ ERREUR lors de la configuration minimale", fallbackError)
-            }
+            Log.e(TAG, "💥 CRASH dans MainActivity onCreate", e)
+            // Configuration d'urgence super basique
+            handleCrash(e)
         }
     }
 
-    private fun setupNavigation() {
+    private fun setupBasicNavigation() {
         try {
-            val navController = findNavController(R.id.nav_host_fragment)
-            Log.d(TAG, "NavController trouvé: ${navController.javaClass.simpleName}")
+            // Récupérer le NavHostFragment de manière sûre
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
 
-            // Les destinations de niveau supérieur (ne montrent pas de bouton retour)
-            val appBarConfiguration = AppBarConfiguration(
-                setOf(
-                    R.id.navigation_meal_plan,
-                    R.id.navigation_food_search,
-                    R.id.navigation_recipes,
-                    R.id.navigation_nutrition,
-                    R.id.navigation_profile
-                )
-            )
+            if (navHostFragment != null) {
+                val navController = navHostFragment.navController
+                Log.d(TAG, "✅ NavController trouvé")
 
-            setupActionBarWithNavController(navController, appBarConfiguration)
-            Log.d(TAG, "✅ ActionBar configurée")
+                // Configuration basic de l'ActionBar (optionnelle)
+                try {
+                    val appBarConfiguration = AppBarConfiguration(
+                        setOf(
+                            R.id.navigation_meal_plan,
+                            R.id.navigation_food_search,
+                            R.id.navigation_recipes,
+                            R.id.navigation_nutrition,
+                            R.id.navigation_profile
+                        )
+                    )
+                    setupActionBarWithNavController(navController, appBarConfiguration)
+                    Log.d(TAG, "✅ ActionBar configurée")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ ActionBar non configurée: ${e.message}")
+                }
 
-            binding.navView.setupWithNavController(navController)
-            Log.d(TAG, "✅ BottomNavigation configurée")
+                // Configuration de la bottom navigation
+                binding.navView.setupWithNavController(navController)
+                Log.d(TAG, "✅ Bottom Navigation configurée")
 
-            // Log de la destination actuelle
-            navController.addOnDestinationChangedListener { _, destination, _ ->
-                Log.d(TAG, "Navigation vers: ${destination.label} (${destination.id})")
+            } else {
+                Log.e(TAG, "❌ NavHostFragment non trouvé")
+                throw Exception("NavHostFragment non trouvé")
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erreur lors de la configuration de la navigation", e)
+            Log.e(TAG, "❌ Erreur configuration navigation", e)
             throw e
         }
     }
 
-    private fun setupMinimalConfiguration() {
-        Log.w(TAG, "Configuration minimale en cours...")
-        // Configuration de base sans navigation avancée
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        Log.d(TAG, "Configuration minimale terminée")
-    }
-
-    private fun setupSyncWithDelay() {
-        // Configurer la synchronisation avec un délai pour éviter les problèmes d'initialisation
-        lifecycleScope.launch {
-            try {
-                Log.d(TAG, "Démarrage de la configuration de synchronisation...")
-                delay(3000) // Délai de 3 secondes pour s'assurer que tout est initialisé
-
-                syncManager.setupPeriodicSync()
-                Log.d(TAG, "✅ Synchronisation périodique configurée avec succès")
-            } catch (e: Exception) {
-                Log.e(TAG, "⚠️ Erreur lors de la configuration de la synchronisation", e)
-                // L'application continue de fonctionner même si la sync échoue
-                Log.w(TAG, "L'application continuera sans synchronisation automatique")
-            }
+    private fun handleCrash(e: Exception) {
+        Log.e(TAG, "🚨 Gestion de crash d'urgence", e)
+        try {
+            // Version ultra-minimale
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+            Log.d(TAG, "🆘 Configuration d'urgence appliquée")
+        } catch (emergencyException: Exception) {
+            Log.e(TAG, "💀 Même la configuration d'urgence a échoué", emergencyException)
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
         return try {
-            val navController = findNavController(R.id.nav_host_fragment)
-            navController.navigateUp() || super.onSupportNavigateUp()
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+            val navController = navHostFragment?.navController
+            navController?.navigateUp() ?: false || super.onSupportNavigateUp()
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur lors de la navigation retour", e)
+            Log.e(TAG, "❌ Erreur navigation up", e)
             super.onSupportNavigateUp()
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG, "📱 MainActivity onStart")
+    }
+
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "MainActivity - onResume()")
+        Log.d(TAG, "▶️ MainActivity onResume")
     }
 
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "MainActivity - onPause()")
+        Log.d(TAG, "⏸️ MainActivity onPause")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "⏹️ MainActivity onStop")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "MainActivity - onDestroy()")
+        Log.d(TAG, "🗑️ MainActivity onDestroy")
     }
 }

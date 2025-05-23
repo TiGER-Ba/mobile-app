@@ -242,21 +242,25 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun displayFavoriteFoods() {
-        // Pour l'instant, filtrer côté UI - idéalement ajouter une méthode dans le ViewModel
+        // CORRECTION : Meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
-                val favoriteFoods = foods.filter { it.favorite }
-                updateFoodsList(favoriteFoods)
+                if (isAdded && !isDetached) {
+                    val favoriteFoods = foods.filter { it.favorite }
+                    updateFoodsList(favoriteFoods)
+                }
             }
         }
     }
 
     private fun displayRecentFoods() {
-        // Pour l'instant, trier par lastUsed - idéalement ajouter une méthode dans le ViewModel
+        // CORRECTION : Meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
-                val recentFoods = foods.sortedByDescending { it.lastUsed }.take(20)
-                updateFoodsList(recentFoods)
+                if (isAdded && !isDetached) {
+                    val recentFoods = foods.sortedByDescending { it.lastUsed }.take(20)
+                    updateFoodsList(recentFoods)
+                }
             }
         }
     }
@@ -284,39 +288,47 @@ class FoodSearchFragment : Fragment() {
     private fun observeViewModel() {
         // Observer l'état de chargement
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            if (isAdded && !isDetached) {
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
         }
 
         // Observer les messages d'erreur ou de succès
         viewModel.message.observe(viewLifecycleOwner) { message ->
             message?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                viewModel.clearMessage()
+                if (isAdded && !isDetached) {
+                    Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                    viewModel.clearMessage()
+                }
             }
         }
 
         // Observer les résultats de recherche locaux
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
-                Log.d(TAG, "Résultats locaux reçus: ${foods.size} aliments")
-                if (!isOnlineSearch) {
-                    updateFoodsList(foods)
+                if (isAdded && !isDetached) {
+                    Log.d(TAG, "Résultats locaux reçus: ${foods.size} aliments")
+                    if (!isOnlineSearch) {
+                        updateFoodsList(foods)
+                    }
                 }
             }
         }
 
         // Observer les résultats de recherche en ligne
         viewModel.onlineSearchResults.observe(viewLifecycleOwner) { foods ->
-            Log.d(TAG, "Résultats en ligne reçus: ${foods.size} aliments")
-            if (isOnlineSearch) {
-                updateFoodsList(foods)
+            if (isAdded && !isDetached) {
+                Log.d(TAG, "Résultats en ligne reçus: ${foods.size} aliments")
+                if (isOnlineSearch) {
+                    updateFoodsList(foods)
+                }
             }
         }
 
         // Observer la requête de recherche
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchQuery.collect { query ->
-                if (binding.searchView.query.toString() != query) {
+                if (isAdded && !isDetached && binding.searchView.query.toString() != query) {
                     binding.searchView.setQuery(query, false)
                 }
             }
@@ -324,6 +336,8 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun updateFoodsList(foods: List<Food>) {
+        if (!isAdded || isDetached) return
+
         Log.d(TAG, "Mise à jour de la liste avec ${foods.size} aliments")
         foodAdapter.submitList(foods)
 

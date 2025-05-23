@@ -1,6 +1,7 @@
 package com.example.mealplanner.ui.mealplan
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.core.util.Pair
@@ -26,109 +27,236 @@ class MealPlanFragment : Fragment() {
     private val viewModel: MealPlanViewModel by viewModels()
     private lateinit var mealAdapter: MealAdapter
 
+    companion object {
+        private const val TAG = "MealPlanFragment"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "🟢 onCreate() - Fragment créé")
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentMealPlanBinding.inflate(inflater, container, false)
-        setHasOptionsMenu(true)
-        return binding.root
+        Log.d(TAG, "🎨 onCreateView() - Création de la vue")
+
+        try {
+            _binding = FragmentMealPlanBinding.inflate(inflater, container, false)
+            setHasOptionsMenu(true)
+            Log.d(TAG, "✅ Binding créé avec succès")
+            return binding.root
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur lors de la création de la vue", e)
+            throw e
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d(TAG, "🔧 onViewCreated() - Configuration de la vue")
 
-        setupDateSelector()
-        setupMealsList()
-        setupAddMealButton()
-        observeViewModel()
+        try {
+            // Initialisation des composants
+            setupDateSelector()
+            Log.d(TAG, "✅ Date selector configuré")
 
-        // CORRECTION : Initialiser avec la date actuelle
-        viewModel.selectDate(System.currentTimeMillis())
+            setupMealsList()
+            Log.d(TAG, "✅ Liste des repas configurée")
+
+            setupAddMealButton()
+            Log.d(TAG, "✅ Bouton d'ajout configuré")
+
+            observeViewModel()
+            Log.d(TAG, "✅ ViewModel observé")
+
+            // CORRECTION : Initialiser avec la date actuelle ET afficher immédiatement
+            val currentDate = System.currentTimeMillis()
+            Log.d(TAG, "📅 Initialisation avec la date: $currentDate")
+            viewModel.selectDate(currentDate)
+
+            // Afficher immédiatement la date
+            updateDateDisplay(currentDate)
+
+            Log.d(TAG, "🎯 Configuration complète terminée")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur lors de la configuration de la vue", e)
+            showErrorMessage("Erreur lors de l'initialisation: ${e.message}")
+        }
     }
 
     private fun setupDateSelector() {
-        binding.dateSelector.setOnClickListener {
+        try {
+            binding.dateSelector.setOnClickListener {
+                Log.d(TAG, "📅 Clic sur le sélecteur de date")
+                showDatePicker()
+            }
+
+            // Observer la date sélectionnée
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.selectedDate.collect { date ->
+                    if (isAdded && !isDetached && _binding != null) {
+                        Log.d(TAG, "📅 Date mise à jour: $date")
+                        updateDateDisplay(date)
+                    }
+                }
+            }
+
+            Log.d(TAG, "✅ Date selector configuré avec succès")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur configuration date selector", e)
+        }
+    }
+
+    private fun showDatePicker() {
+        try {
             val datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Sélectionner une date")
                 .setSelection(viewModel.selectedDate.value)
                 .build()
 
             datePicker.addOnPositiveButtonClickListener { date ->
+                Log.d(TAG, "📅 Nouvelle date sélectionnée: $date")
                 viewModel.selectDate(date)
             }
 
             datePicker.show(parentFragmentManager, "DATE_PICKER")
-        }
-
-        // Observer la date sélectionnée
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.selectedDate.collect { date ->
-                updateDateDisplay(date)
-            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur ouverture date picker", e)
+            showErrorMessage("Impossible d'ouvrir le sélecteur de date")
         }
     }
 
     private fun updateDateDisplay(date: Long) {
-        val sdf = SimpleDateFormat("EEEE dd MMMM yyyy", Locale.getDefault())
-        binding.textViewSelectedDate.text = sdf.format(Date(date))
+        if (!isAdded || isDetached || _binding == null) {
+            Log.w(TAG, "⚠️ Fragment non attaché, pas de mise à jour de date")
+            return
+        }
+
+        try {
+            val sdf = SimpleDateFormat("EEEE dd MMMM yyyy", Locale.getDefault())
+            val formattedDate = sdf.format(Date(date))
+            binding.textViewSelectedDate.text = formattedDate
+            Log.d(TAG, "📅 Date affichée: $formattedDate")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur mise à jour affichage date", e)
+            binding.textViewSelectedDate.text = "Date non disponible"
+        }
     }
 
     private fun setupMealsList() {
-        mealAdapter = MealAdapter { meal ->
-            // Navigation vers le détail du repas
-            val action = MealPlanFragmentDirections.actionMealPlanToMealDetails(meal.id)
-            findNavController().navigate(action)
-        }
-
-        binding.recyclerViewMeals.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = mealAdapter
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.mealsForCurrentPlan.collect { meals ->
-                mealAdapter.submitList(meals)
-
-                // Afficher un message si aucun repas n'est planifié
-                if (meals.isEmpty()) {
-                    binding.textViewNoMeals.visibility = View.VISIBLE
-                } else {
-                    binding.textViewNoMeals.visibility = View.GONE
+        try {
+            mealAdapter = MealAdapter { meal ->
+                Log.d(TAG, "🍽️ Clic sur repas: ${meal.id}")
+                try {
+                    val action = MealPlanFragmentDirections.actionMealPlanToMealDetails(meal.id)
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erreur navigation vers détails repas", e)
+                    showErrorMessage("Impossible d'ouvrir les détails du repas")
                 }
             }
+
+            binding.recyclerViewMeals.apply {
+                layoutManager = LinearLayoutManager(context)
+                adapter = mealAdapter
+                Log.d(TAG, "✅ RecyclerView configuré")
+            }
+
+            // Observer les repas
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.mealsForCurrentPlan.collect { meals ->
+                    if (isAdded && !isDetached && _binding != null) {
+                        Log.d(TAG, "🍽️ Mise à jour liste repas: ${meals.size} repas")
+                        mealAdapter.submitList(meals)
+
+                        // Afficher/masquer le message "aucun repas"
+                        if (meals.isEmpty()) {
+                            binding.textViewNoMeals.visibility = View.VISIBLE
+                            binding.recyclerViewMeals.visibility = View.VISIBLE
+                            Log.d(TAG, "📝 Affichage message 'aucun repas'")
+                        } else {
+                            binding.textViewNoMeals.visibility = View.GONE
+                            binding.recyclerViewMeals.visibility = View.VISIBLE
+                            Log.d(TAG, "📋 Affichage de ${meals.size} repas")
+                        }
+                    }
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur configuration liste repas", e)
+            showErrorMessage("Erreur lors de la configuration de la liste")
         }
     }
 
     private fun setupAddMealButton() {
-        binding.fabAddMeal.setOnClickListener {
-            val action = MealPlanFragmentDirections.actionMealPlanToAddMeal(viewModel.selectedDate.value)
-            findNavController().navigate(action)
+        try {
+            binding.fabAddMeal.setOnClickListener {
+                Log.d(TAG, "➕ Clic sur bouton ajouter repas")
+                try {
+                    val action = MealPlanFragmentDirections.actionMealPlanToAddMeal(viewModel.selectedDate.value)
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erreur navigation vers ajout repas", e)
+                    showErrorMessage("Impossible d'ouvrir l'ajout de repas")
+                }
+            }
+            Log.d(TAG, "✅ Bouton d'ajout configuré")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur configuration bouton ajout", e)
         }
     }
 
     private fun observeViewModel() {
-        viewModel.message.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                viewModel.clearMessage()
+        try {
+            // Observer les messages
+            viewModel.message.observe(viewLifecycleOwner) { message ->
+                message?.let {
+                    if (isAdded && !isDetached) {
+                        Log.d(TAG, "💬 Message du ViewModel: $it")
+                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                        viewModel.clearMessage()
+                    }
+                }
             }
-        }
 
-        viewModel.currentMealPlan.observe(viewLifecycleOwner) { mealPlan ->
-            // On peut utiliser l'ID du plan de repas pour d'autres actions si nécessaire
+            // Observer le plan de repas actuel
+            viewModel.currentMealPlan.observe(viewLifecycleOwner) { mealPlan ->
+                mealPlan?.let {
+                    Log.d(TAG, "📋 Plan de repas actuel: ${it.id} pour la date ${it.date}")
+                }
+            }
+
+            Log.d(TAG, "✅ Observateurs ViewModel configurés")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur configuration observateurs", e)
+        }
+    }
+
+    private fun showErrorMessage(message: String) {
+        if (isAdded && !isDetached) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.meal_plan_menu, menu)
-        super.onCreateOptionsMenu(menu, inflater)
+        try {
+            inflater.inflate(R.menu.meal_plan_menu, menu)
+            super.onCreateOptionsMenu(menu, inflater)
+            Log.d(TAG, "✅ Menu créé")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur création menu", e)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_select_date_range -> {
+                Log.d(TAG, "📅 Sélection plage de dates")
                 showDateRangePicker()
                 true
             }
@@ -137,30 +265,51 @@ class MealPlanFragment : Fragment() {
     }
 
     private fun showDateRangePicker() {
-        val dateRangePicker = MaterialDatePicker.Builder.dateRangePicker()
-            .setTitleText("Sélectionner une période")
-            .setSelection(
-                Pair(
-                    viewModel.selectedDate.value,
-                    viewModel.selectedDate.value + (6 * 24 * 60 * 60 * 1000) // +6 jours
+        if (!isAdded || isDetached) return
+
+        try {
+            val dateRangePicker = MaterialDatePicker.Builder.dateRangePicker()
+                .setTitleText("Sélectionner une période")
+                .setSelection(
+                    Pair(
+                        viewModel.selectedDate.value,
+                        viewModel.selectedDate.value + (6 * 24 * 60 * 60 * 1000) // +6 jours
+                    )
                 )
-            )
-            .build()
+                .build()
 
-        dateRangePicker.addOnPositiveButtonClickListener { dateRange ->
-            Toast.makeText(
-                context,
-                "Période sélectionnée: ${dateRange.first} à ${dateRange.second}",
-                Toast.LENGTH_SHORT
-            ).show()
-            // Ici vous pourriez implémenter l'affichage d'une vue hebdomadaire
+            dateRangePicker.addOnPositiveButtonClickListener { dateRange ->
+                Toast.makeText(
+                    context,
+                    "Période sélectionnée: ${dateRange.first} à ${dateRange.second}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            dateRangePicker.show(parentFragmentManager, "DATE_RANGE_PICKER")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur ouverture sélecteur plage", e)
         }
+    }
 
-        dateRangePicker.show(parentFragmentManager, "DATE_RANGE_PICKER")
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "▶️ onResume() - Fragment repris")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "⏸️ onPause() - Fragment en pause")
     }
 
     override fun onDestroyView() {
+        Log.d(TAG, "🗑️ onDestroyView() - Destruction de la vue")
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "🔴 onDestroy() - Fragment détruit")
     }
 }

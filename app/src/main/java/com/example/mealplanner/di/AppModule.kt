@@ -20,7 +20,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getDatabase(context)
+        return try {
+            AppDatabase.getDatabase(context)
+        } catch (e: Exception) {
+            // En cas d'erreur, recréer la base de données
+            context.deleteDatabase("meal_planner_database")
+            AppDatabase.getDatabase(context)
+        }
     }
 
     @Provides
@@ -68,12 +74,22 @@ object AppModule {
     @Provides
     @Singleton
     fun provideNutritionApiService(): NutritionApiService {
-        return ApiClient.nutritionService
+        return try {
+            ApiClient.nutritionService
+        } catch (e: Exception) {
+            // Fallback si l'API ne peut pas être initialisée
+            throw RuntimeException("Impossible d'initialiser l'API", e)
+        }
     }
 
     @Provides
     @Singleton
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
-        return WorkManager.getInstance(context)
+        return try {
+            WorkManager.getInstance(context)
+        } catch (e: Exception) {
+            // Si WorkManager ne peut pas être initialisé, on continue sans
+            throw RuntimeException("Impossible d'initialiser WorkManager", e)
+        }
     }
 }

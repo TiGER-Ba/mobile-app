@@ -88,36 +88,42 @@ class MealDetailsFragment : Fragment() {
     private fun loadMealDetails() {
         viewModel.selectMeal(args.mealId)
 
-        // Observer le repas sélectionné
+        // Observer le repas sélectionné avec meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.mealsForCurrentPlan.collect { meals ->
-                val meal = meals.find { it.id == args.mealId }
-                meal?.let {
-                    currentMeal = it
-                    updateUI(it)
+                if (isAdded && !isDetached) {
+                    val meal = meals.find { it.id == args.mealId }
+                    meal?.let {
+                        currentMeal = it
+                        updateUI(it)
+                    }
                 }
             }
         }
 
-        // Observer les éléments du repas
+        // Observer les éléments du repas avec meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.mealItems.collect { items ->
-                mealItemAdapter.submitList(items)
+                if (isAdded && !isDetached) {
+                    mealItemAdapter.submitList(items)
 
-                // Afficher un message si aucun aliment n'est ajouté
-                if (items.isEmpty()) {
-                    binding.textViewNoFoods.visibility = View.VISIBLE
-                } else {
-                    binding.textViewNoFoods.visibility = View.GONE
+                    // Afficher un message si aucun aliment n'est ajouté
+                    if (items.isEmpty()) {
+                        binding.textViewNoFoods.visibility = View.VISIBLE
+                    } else {
+                        binding.textViewNoFoods.visibility = View.GONE
+                    }
+
+                    // Calculer les macronutriments totaux
+                    updateNutritionInfo(items)
                 }
-
-                // Calculer les macronutriments totaux
-                updateNutritionInfo(items)
             }
         }
     }
 
     private fun updateUI(meal: Meal) {
+        if (!isAdded || isDetached) return
+
         // Formater l'heure du repas
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeString = timeFormat.format(Date(meal.time))
@@ -149,6 +155,8 @@ class MealDetailsFragment : Fragment() {
     }
 
     private fun updateNutritionInfo(items: List<MealItemDetails>) {
+        if (!isAdded || isDetached) return
+
         var totalCalories = 0
         var totalProtein = 0f
         var totalCarbs = 0f
@@ -183,6 +191,8 @@ class MealDetailsFragment : Fragment() {
     }
 
     private fun showDeleteMealConfirmationDialog() {
+        if (!isAdded || isDetached) return
+
         currentMeal?.let { meal ->
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Supprimer le repas")
@@ -196,6 +206,8 @@ class MealDetailsFragment : Fragment() {
     }
 
     private fun showAddFoodOptionsDialog() {
+        if (!isAdded || isDetached) return
+
         val options = arrayOf("Ajouter un aliment", "Ajouter une recette")
 
         MaterialAlertDialogBuilder(requireContext())
@@ -225,6 +237,8 @@ class MealDetailsFragment : Fragment() {
     }
 
     private fun showDeleteConfirmationDialog(mealItemDetails: MealItemDetails) {
+        if (!isAdded || isDetached) return
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Supprimer l'élément")
             .setMessage("Êtes-vous sûr de vouloir supprimer cet élément du repas ?")
@@ -238,14 +252,16 @@ class MealDetailsFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.message.observe(viewLifecycleOwner) { message ->
             message?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                if (isAdded && !isDetached) {
+                    Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
 
-                // Si le repas a été supprimé, revenir en arrière
-                if (it.contains("supprimé", ignoreCase = true) && it.contains("repas", ignoreCase = true)) {
-                    findNavController().navigateUp()
+                    // Si le repas a été supprimé, revenir en arrière
+                    if (it.contains("supprimé", ignoreCase = true) && it.contains("repas", ignoreCase = true)) {
+                        findNavController().navigateUp()
+                    }
+
+                    viewModel.clearMessage()
                 }
-
-                viewModel.clearMessage()
             }
         }
     }

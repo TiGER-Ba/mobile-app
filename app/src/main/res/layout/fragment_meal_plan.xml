@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".ui.mealplan.MealPlanFragment">
 
+    <!-- Sélecteur de Date -->
     <androidx.cardview.widget.CardView
         android:id="@+id/dateSelector"
         android:layout_width="match_parent"
@@ -16,6 +19,7 @@
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/primary_green_light"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -28,10 +32,11 @@
             android:padding="16dp">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:contentDescription="Icône de calendrier"
-                android:src="@drawable/ic_calendar" />
+                android:src="@drawable/ic_calendar"
+                app:tint="@color/primary_green" />
 
             <TextView
                 android:id="@+id/textViewSelectedDate"
@@ -40,29 +45,61 @@
                 android:layout_marginStart="16dp"
                 android:layout_weight="1"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textColor="@color/primary_green"
                 android:textStyle="bold"
+                android:text="Chargement..."
                 tools:text="Mercredi 21 Mai 2025" />
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:contentDescription="Icône d'édition"
-                android:src="@drawable/ic_edit" />
+                android:src="@drawable/ic_edit"
+                app:tint="@color/primary_green" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <TextView
+    <!-- Message "Pas de repas" -->
+    <LinearLayout
         android:id="@+id/textViewNoMeals"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Aucun repas planifié pour cette journée.\nAppuyez sur + pour en ajouter un."
-        android:textAlignment="center"
-        android:visibility="gone"
+        android:layout_margin="32dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/dateSelector">
 
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginBottom="16dp"
+            android:alpha="0.6"
+            android:src="@drawable/placeholder_food"
+            app:tint="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Aucun repas planifié\npour cette journée."
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Appuyez sur + pour en ajouter un."
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="@color/text_hint" />
+    </LinearLayout>
+
+    <!-- Liste des Repas -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMeals"
         android:layout_width="0dp"
@@ -70,12 +107,14 @@
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:paddingBottom="80dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dateSelector"
         tools:listitem="@layout/item_meal" />
 
+    <!-- Bouton d'Ajout de Repas -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddMeal"
         android:layout_width="wrap_content"
@@ -83,6 +122,8 @@
         android:layout_margin="16dp"
         android:contentDescription="Ajouter un repas"
         android:src="@drawable/ic_add"
+        app:backgroundTint="@color/primary_green"
+        app:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

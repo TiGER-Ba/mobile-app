@@ -5,67 +5,117 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/navigation_meal_plan">
 
+    <!-- Fragment principal : Plan de repas -->
     <fragment
         android:id="@+id/navigation_meal_plan"
         android:name="com.example.mealplanner.ui.mealplan.MealPlanFragment"
         android:label="@string/title_meal_plan"
-        tools:layout="@layout/fragment_meal_plan" />
+        tools:layout="@layout/fragment_meal_plan">
 
+        <!-- Action vers les détails d'un repas -->
+        <action
+            android:id="@+id/actionMealPlanToMealDetails"
+            app:destination="@id/navigation_meal_details" />
+
+        <!-- Action vers l'ajout d'un repas -->
+        <action
+            android:id="@+id/actionMealPlanToAddMeal"
+            app:destination="@id/navigation_add_meal" />
+    </fragment>
+
+    <!-- Fragment : Recherche d'aliments -->
     <fragment
         android:id="@+id/navigation_food_search"
         android:name="com.example.mealplanner.ui.search.FoodSearchFragment"
         android:label="@string/title_food_search"
-        tools:layout="@layout/fragment_food_search" />
+        tools:layout="@layout/fragment_food_search">
 
+        <!-- Action vers les détails d'un aliment -->
+        <action
+            android:id="@+id/actionFoodSearchToFoodDetails"
+            app:destination="@id/navigation_food_details" />
+
+        <!-- Action vers l'ajout d'un aliment -->
+        <action
+            android:id="@+id/actionFoodSearchToAddFood"
+            app:destination="@id/navigation_add_food" />
+    </fragment>
+
+    <!-- Fragment : Recettes -->
     <fragment
         android:id="@+id/navigation_recipes"
         android:name="com.example.mealplanner.ui.recipes.RecipesFragment"
         android:label="@string/title_recipes"
-        tools:layout="@layout/fragment_recipes" />
+        tools:layout="@layout/fragment_recipes">
 
+        <!-- Action vers les détails d'une recette -->
+        <action
+            android:id="@+id/actionRecipesToRecipeDetails"
+            app:destination="@id/navigation_recipe_details" />
+
+        <!-- Action vers l'ajout d'une recette -->
+        <action
+            android:id="@+id/actionRecipesToAddRecipe"
+            app:destination="@id/navigation_add_recipe" />
+    </fragment>
+
+    <!-- Fragment : Nutrition -->
     <fragment
         android:id="@+id/navigation_nutrition"
         android:name="com.example.mealplanner.ui.nutrition.NutritionFragment"
         android:label="@string/title_nutrition"
         tools:layout="@layout/fragment_nutrition" />
 
+    <!-- Fragment : Profil -->
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.example.mealplanner.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile" />
 
+    <!-- Fragment : Détails d'un aliment -->
     <fragment
         android:id="@+id/navigation_food_details"
         android:name="com.example.mealplanner.ui.search.FoodDetailsFragment"
         android:label="@string/title_food_details"
         tools:layout="@layout/fragment_food_details">
+
         <argument
             android:name="foodId"
             app:argType="string" />
     </fragment>
 
+    <!-- Fragment : Ajouter un aliment -->
     <fragment
         android:id="@+id/navigation_add_food"
         android:name="com.example.mealplanner.ui.search.AddFoodFragment"
         android:label="@string/title_add_food"
         tools:layout="@layout/fragment_add_food" />
 
+    <!-- Fragment : Détails d'une recette -->
     <fragment
         android:id="@+id/navigation_recipe_details"
         android:name="com.example.mealplanner.ui.recipes.RecipeDetailsFragment"
         android:label="@string/title_recipe_details"
         tools:layout="@layout/fragment_recipe_details">
+
         <argument
             android:name="recipeId"
             app:argType="string" />
+
+        <!-- Action vers l'édition de la recette -->
+        <action
+            android:id="@+id/actionRecipeDetailsToEditRecipe"
+            app:destination="@id/navigation_add_recipe" />
     </fragment>
 
+    <!-- Fragment : Ajouter/Éditer une recette -->
     <fragment
         android:id="@+id/navigation_add_recipe"
         android:name="com.example.mealplanner.ui.recipes.AddRecipeFragment"
         android:label="@string/title_add_recipe"
         tools:layout="@layout/fragment_add_recipe">
+
         <argument
             android:name="recipeId"
             app:argType="string"
@@ -73,37 +123,28 @@
             android:defaultValue="@null" />
     </fragment>
 
+    <!-- Fragment : Ajouter un repas -->
     <fragment
         android:id="@+id/navigation_add_meal"
         android:name="com.example.mealplanner.ui.mealplan.AddMealFragment"
         android:label="@string/title_add_meal"
         tools:layout="@layout/fragment_add_meal">
+
         <argument
             android:name="date"
             app:argType="long" />
     </fragment>
 
+    <!-- Fragment : Détails d'un repas -->
     <fragment
         android:id="@+id/navigation_meal_details"
         android:name="com.example.mealplanner.ui.mealplan.MealDetailsFragment"
         android:label="@string/title_meal_details"
         tools:layout="@layout/fragment_meal_details">
+
         <argument
             android:name="mealId"
             app:argType="string" />
     </fragment>
-
-    <!-- Actions de navigation -->
-    <action android:id="@+id/action_global_food_details"
-        app:destination="@id/navigation_food_details" />
-
-    <action android:id="@+id/action_global_add_food"
-        app:destination="@id/navigation_add_food" />
-
-    <action android:id="@+id/action_global_recipe_details"
-        app:destination="@id/navigation_recipe_details" />
-
-    <action android:id="@+id/action_global_add_recipe"
-        app:destination="@id/navigation_add_recipe" />
 
 </navigation>
