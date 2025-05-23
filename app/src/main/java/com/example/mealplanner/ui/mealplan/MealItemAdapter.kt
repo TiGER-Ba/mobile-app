@@ -29,23 +29,25 @@ class MealItemAdapter(
         private val binding: ItemMealFoodBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        private var currentMealItem: MealItemDetails? = null
+
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onItemClick(getItem(position))
+                currentMealItem?.let { mealItem ->
+                    onItemClick(mealItem)
                 }
             }
 
             binding.buttonDelete.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onDeleteClick(getItem(position))
+                currentMealItem?.let { mealItem ->
+                    onDeleteClick(mealItem)
                 }
             }
         }
 
         fun bind(mealItem: MealItemDetails) {
+            currentMealItem = mealItem
+
             binding.textViewName.text = mealItem.name
             binding.textViewCalories.text = "${mealItem.calories} kcal"
 

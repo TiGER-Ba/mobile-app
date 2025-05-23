@@ -9,40 +9,19 @@
         android:id="@+id/navigation_meal_plan"
         android:name="com.example.mealplanner.ui.mealplan.MealPlanFragment"
         android:label="@string/title_meal_plan"
-        tools:layout="@layout/fragment_meal_plan">
-        <action
-            android:id="@+id/action_meal_plan_to_add_meal"
-            app:destination="@id/navigation_add_meal" />
-        <action
-            android:id="@+id/action_meal_plan_to_meal_details"
-            app:destination="@id/navigation_meal_details" />
-    </fragment>
+        tools:layout="@layout/fragment_meal_plan" />
 
     <fragment
         android:id="@+id/navigation_food_search"
         android:name="com.example.mealplanner.ui.search.FoodSearchFragment"
         android:label="@string/title_food_search"
-        tools:layout="@layout/fragment_food_search">
-        <action
-            android:id="@+id/action_food_search_to_food_details"
-            app:destination="@id/navigation_food_details" />
-        <action
-            android:id="@+id/action_food_search_to_add_food"
-            app:destination="@id/navigation_add_food" />
-    </fragment>
+        tools:layout="@layout/fragment_food_search" />
 
     <fragment
         android:id="@+id/navigation_recipes"
         android:name="com.example.mealplanner.ui.recipes.RecipesFragment"
         android:label="@string/title_recipes"
-        tools:layout="@layout/fragment_recipes">
-        <action
-            android:id="@+id/action_recipes_to_recipe_details"
-            app:destination="@id/navigation_recipe_details" />
-        <action
-            android:id="@+id/action_recipes_to_add_recipe"
-            app:destination="@id/navigation_add_recipe" />
-    </fragment>
+        tools:layout="@layout/fragment_recipes" />
 
     <fragment
         android:id="@+id/navigation_nutrition"
@@ -113,5 +92,18 @@
             android:name="mealId"
             app:argType="string" />
     </fragment>
+
+    <!-- Actions de navigation -->
+    <action android:id="@+id/action_global_food_details"
+        app:destination="@id/navigation_food_details" />
+
+    <action android:id="@+id/action_global_add_food"
+        app:destination="@id/navigation_add_food" />
+
+    <action android:id="@+id/action_global_recipe_details"
+        app:destination="@id/navigation_recipe_details" />
+
+    <action android:id="@+id/action_global_add_recipe"
+        app:destination="@id/navigation_add_recipe" />
 
 </navigation>

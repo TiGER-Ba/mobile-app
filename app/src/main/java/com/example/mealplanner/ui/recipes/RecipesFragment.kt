@@ -1,6 +1,7 @@
 package com.example.mealplanner.ui.recipes
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mealplanner.data.model.Recipe
+import com.example.mealplanner.data.model.RecipeIngredient
 import com.example.mealplanner.databinding.FragmentRecipesBinding
 import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,6 +28,10 @@ class RecipesFragment : Fragment() {
     private val viewModel: RecipeViewModel by viewModels()
     private lateinit var recipeAdapter: RecipeAdapter
 
+    companion object {
+        private const val TAG = "RecipesFragment"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -38,11 +44,113 @@ class RecipesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d(TAG, "RecipesFragment créé")
+
         setupRecipesList()
         setupSearchView()
         setupTabLayout()
         setupAddRecipeButton()
         observeRecipes()
+
+        // Ajouter des recettes de test
+        addTestRecipes()
+    }
+
+    private fun addTestRecipes() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Recette 1: Pancakes aux bananes
+                val recipe1 = Recipe(
+                    name = "Pancakes aux bananes",
+                    description = "Des délicieux pancakes moelleux et sucrés",
+                    instructions = "1. Écraser les bananes dans un bol\n2. Ajouter les œufs et mélanger\n3. Incorporer la farine et le lait\n4. Cuire dans une poêle chaude",
+                    preparationTime = 10,
+                    cookingTime = 15,
+                    servings = 4,
+                    tags = listOf("petit-déjeuner", "végétarien", "banane"),
+                    isSynced = false
+                )
+
+                val ingredients1 = listOf(
+                    RecipeIngredient(
+                        recipeId = recipe1.id,
+                        foodId = "fake_banana_id",
+                        quantity = 2f,
+                        unit = "pièces"
+                    ),
+                    RecipeIngredient(
+                        recipeId = recipe1.id,
+                        foodId = "fake_flour_id",
+                        quantity = 200f,
+                        unit = "g"
+                    ),
+                    RecipeIngredient(
+                        recipeId = recipe1.id,
+                        foodId = "fake_milk_id",
+                        quantity = 250f,
+                        unit = "ml"
+                    )
+                )
+
+                viewModel.saveRecipe(
+                    name = recipe1.name,
+                    description = recipe1.description,
+                    instructions = recipe1.instructions,
+                    prepTime = recipe1.preparationTime,
+                    cookTime = recipe1.cookingTime,
+                    servings = recipe1.servings,
+                    tags = recipe1.tags
+                )
+
+                // Recette 2: Salade de quinoa
+                val recipe2 = Recipe(
+                    name = "Salade de quinoa aux légumes",
+                    description = "Une salade nutritive et colorée",
+                    instructions = "1. Cuire le quinoa\n2. Couper les légumes en dés\n3. Mélanger tous les ingrédients\n4. Assaisonner avec l'huile d'olive et le citron",
+                    preparationTime = 15,
+                    cookingTime = 20,
+                    servings = 3,
+                    tags = listOf("végétarien", "sans-gluten", "salade"),
+                    isSynced = false
+                )
+
+                viewModel.saveRecipe(
+                    name = recipe2.name,
+                    description = recipe2.description,
+                    instructions = recipe2.instructions,
+                    prepTime = recipe2.preparationTime,
+                    cookTime = recipe2.cookingTime,
+                    servings = recipe2.servings,
+                    tags = recipe2.tags
+                )
+
+                // Recette 3: Poulet grillé aux herbes
+                val recipe3 = Recipe(
+                    name = "Poulet grillé aux herbes",
+                    description = "Un plat principal savoureux et sain",
+                    instructions = "1. Mariner le poulet avec les herbes\n2. Préchauffer le grill\n3. Griller le poulet 8-10 min de chaque côté\n4. Laisser reposer avant de servir",
+                    preparationTime = 20,
+                    cookingTime = 25,
+                    servings = 4,
+                    tags = listOf("protéine", "grill", "herbes"),
+                    isSynced = false
+                )
+
+                viewModel.saveRecipe(
+                    name = recipe3.name,
+                    description = recipe3.description,
+                    instructions = recipe3.instructions,
+                    prepTime = recipe3.preparationTime,
+                    cookTime = recipe3.cookingTime,
+                    servings = recipe3.servings,
+                    tags = recipe3.tags
+                )
+
+                Log.d(TAG, "Recettes de test ajoutées")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors de l'ajout des recettes de test", e)
+            }
+        }
     }
 
     private fun setupRecipesList() {
@@ -108,6 +216,7 @@ class RecipesFragment : Fragment() {
     private fun observeAllRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.allRecipes.collect { recipes ->
+                Log.d(TAG, "Recettes reçues: ${recipes.size}")
                 updateRecipesList(recipes)
             }
         }
@@ -116,6 +225,7 @@ class RecipesFragment : Fragment() {
     private fun observeFavoriteRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.favoriteRecipes.collect { recipes ->
+                Log.d(TAG, "Recettes favorites reçues: ${recipes.size}")
                 updateRecipesList(recipes)
             }
         }

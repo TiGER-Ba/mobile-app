@@ -34,16 +34,19 @@ class MealAdapter(
         private val binding: ItemMealBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        private var currentMeal: Meal? = null
+
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onMealClick(getItem(position))
+                currentMeal?.let { meal ->
+                    onMealClick(meal)
                 }
             }
         }
 
         fun bind(meal: Meal) {
+            currentMeal = meal
+
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             val timeString = timeFormat.format(Date(meal.time))
 

@@ -32,23 +32,25 @@ class FoodAdapter(
         private val binding: ItemFoodBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        private var currentFood: Food? = null
+
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onFoodClick(getItem(position))
+                currentFood?.let { food ->
+                    onFoodClick(food)
                 }
             }
 
             binding.buttonFavorite.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onFavoriteClick(getItem(position))
+                currentFood?.let { food ->
+                    onFavoriteClick(food)
                 }
             }
         }
 
         fun bind(food: Food) {
+            currentFood = food
+
             binding.textViewName.text = food.name
             binding.textViewCalories.text = "${food.calories} kcal"
             binding.textViewMacros.text = "P: ${food.protein}g  C: ${food.carbs}g  L: ${food.fat}g"

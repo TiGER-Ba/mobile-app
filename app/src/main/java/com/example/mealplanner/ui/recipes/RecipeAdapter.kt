@@ -33,23 +33,25 @@ class RecipeAdapter(
         private val binding: ItemRecipeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        private var currentRecipe: Recipe? = null
+
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onRecipeClick(getItem(position))
+                currentRecipe?.let { recipe ->
+                    onRecipeClick(recipe)
                 }
             }
 
             binding.buttonFavorite.setOnClickListener {
-                val position = adapterPosition // CORRIGÉ ICI
-                if (position != RecyclerView.NO_POSITION) {
-                    onFavoriteClick(getItem(position))
+                currentRecipe?.let { recipe ->
+                    onFavoriteClick(recipe)
                 }
             }
         }
 
         fun bind(recipe: Recipe) {
+            currentRecipe = recipe
+
             binding.textViewName.text = recipe.name
             binding.textViewDescription.text = recipe.description
 

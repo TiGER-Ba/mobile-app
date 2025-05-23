@@ -10,11 +10,13 @@ import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.mealplanner.R
 import com.example.mealplanner.data.model.NutritionGoal
 import com.example.mealplanner.data.model.UserProfile
 import com.example.mealplanner.databinding.FragmentProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
@@ -46,15 +48,32 @@ class ProfileFragment : Fragment() {
         observeUserProfile()
         setupSaveButton()
 
-        // Ajouter un profil par défaut si aucun n'existe
-        createDefaultProfileIfNeeded()
+        // Charger le profil existant ou créer un profil par défaut
+        loadOrCreateProfile()
     }
 
-    private fun createDefaultProfileIfNeeded() {
+    private fun loadOrCreateProfile() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Vérifier si un profil existe déjà
+                viewModel.userProfile.observe(viewLifecycleOwner) { profile ->
+                    if (profile == null) {
+                        // Créer un profil par défaut
+                        createDefaultProfile()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors du chargement du profil", e)
+                createDefaultProfile()
+            }
+        }
+    }
+
+    private fun createDefaultProfile() {
         // Créer un profil par défaut pour les tests
         viewModel.saveUserProfile(
-            name = "Utilisateur Test",
-            age = 25,
+            name = "Utilisateur",
+            age = 30,
             gender = "Homme",
             weight = 70f,
             height = 175f,
@@ -69,7 +88,10 @@ class ProfileFragment : Fragment() {
             // Configurer le dropdown pour le genre
             val genders = arrayOf("Homme", "Femme", "Autre")
             val genderAdapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, genders)
-            (binding.dropdownGender as? AutoCompleteTextView)?.setAdapter(genderAdapter)
+            (binding.dropdownGender as? AutoCompleteTextView)?.apply {
+                setAdapter(genderAdapter)
+                setText("Homme", false) // Valeur par défaut
+            }
 
             // Configurer le dropdown pour l'objectif
             val goals = listOf(
@@ -79,7 +101,10 @@ class ProfileFragment : Fragment() {
                 Pair(NutritionGoal.MUSCLE_GAIN, "Prise de muscle")
             )
             val goalAdapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, goals.map { it.second })
-            (binding.dropdownGoal as? AutoCompleteTextView)?.setAdapter(goalAdapter)
+            (binding.dropdownGoal as? AutoCompleteTextView)?.apply {
+                setAdapter(goalAdapter)
+                setText("Maintien du poids", false) // Valeur par défaut
+            }
 
             // Configurer le dropdown pour le niveau d'activité
             val activityLevels = listOf(
@@ -90,7 +115,10 @@ class ProfileFragment : Fragment() {
                 Pair(5, "Extrêmement actif")
             )
             val activityAdapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, activityLevels.map { it.second })
-            (binding.dropdownActivityLevel as? AutoCompleteTextView)?.setAdapter(activityAdapter)
+            (binding.dropdownActivityLevel as? AutoCompleteTextView)?.apply {
+                setAdapter(activityAdapter)
+                setText("Légèrement actif", false) // Valeur par défaut
+            }
 
             Log.d(TAG, "Dropdowns configurés")
         } catch (e: Exception) {
@@ -163,18 +191,49 @@ class ProfileFragment : Fragment() {
     }
 
     private fun validateInputs(): Boolean {
-        // Vérifier que les champs critiques sont remplis
+        var isValid = true
+
+        // Vérifier le nom
         if (binding.editTextName.text.isNullOrEmpty()) {
-            Toast.makeText(context, "Veuillez saisir un nom", Toast.LENGTH_SHORT).show()
-            return false
+            binding.nameInputLayout.error = "Le nom est requis"
+            isValid = false
+        } else {
+            binding.nameInputLayout.error = null
         }
 
-        return true
+        // Vérifier l'âge
+        val ageText = binding.editTextAge.text.toString()
+        if (ageText.isEmpty() || ageText.toIntOrNull() == null || ageText.toInt() <= 0) {
+            binding.ageInputLayout.error = "Âge valide requis"
+            isValid = false
+        } else {
+            binding.ageInputLayout.error = null
+        }
+
+        // Vérifier le poids
+        val weightText = binding.editTextWeight.text.toString()
+        if (weightText.isEmpty() || weightText.toFloatOrNull() == null || weightText.toFloat() <= 0) {
+            binding.weightInputLayout.error = "Poids valide requis"
+            isValid = false
+        } else {
+            binding.weightInputLayout.error = null
+        }
+
+        // Vérifier la taille
+        val heightText = binding.editTextHeight.text.toString()
+        if (heightText.isEmpty() || heightText.toFloatOrNull() == null || heightText.toFloat() <= 0) {
+            binding.heightInputLayout.error = "Taille valide requise"
+            isValid = false
+        } else {
+            binding.heightInputLayout.error = null
+        }
+
+        return isValid
     }
 
     private fun saveUserProfile() {
         try {
-            val name = binding.editTextName.text.toString().ifEmpty { "Utilisateur" }
+            val name = binding.editTextName.text.toString()
             val age = binding.editTextAge.text.toString().toIntOrNull() ?: 25
             val gender = binding.dropdownGender.text.toString().ifEmpty { "Homme" }
             val weight = binding.editTextWeight.text.toString().toFloatOrNull() ?: 70f

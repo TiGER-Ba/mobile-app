@@ -56,63 +56,87 @@ class FoodSearchFragment : Fragment() {
         setupAddFoodButton()
         observeViewModel()
 
-        // CORRECTION : Charger les données initiales
+        // Charger les données initiales
         loadInitialData()
     }
 
     private fun loadInitialData() {
         Log.d(TAG, "Chargement des données initiales")
-        // Charger tous les aliments au démarrage
-        viewModel.searchFoods("", false)
 
-        // Ajouter quelques aliments de test si la base est vide
-        addTestFoodsIfEmpty()
+        // Ajouter des aliments de test si la base est vide
+        viewLifecycleOwner.lifecycleScope.launch {
+            addTestFoodsIfEmpty()
+            // Charger tous les aliments après avoir ajouté les données de test
+            viewModel.searchFoods("", false)
+        }
     }
 
-    private fun addTestFoodsIfEmpty() {
-        lifecycleScope.launch { // CORRIGÉ : lifecycleScope au lieu de viewModelScope
-            try {
-                // Ajouter des aliments de test pour avoir quelque chose à afficher
-                viewModel.addCustomFood(
-                    name = "Banane",
-                    calories = 89,
-                    protein = 1.1f,
-                    carbs = 22.8f,
-                    fat = 0.3f,
-                    fiber = 2.6f,
-                    sugar = 12.2f,
-                    servingSize = 100f,
-                    servingUnit = "g"
-                )
+    private suspend fun addTestFoodsIfEmpty() {
+        try {
+            // Ajouter des aliments de test pour avoir quelque chose à afficher
+            viewModel.addCustomFood(
+                name = "Banane",
+                calories = 89,
+                protein = 1.1f,
+                carbs = 22.8f,
+                fat = 0.3f,
+                fiber = 2.6f,
+                sugar = 12.2f,
+                servingSize = 100f,
+                servingUnit = "g"
+            )
 
-                viewModel.addCustomFood(
-                    name = "Pomme",
-                    calories = 52,
-                    protein = 0.3f,
-                    carbs = 13.8f,
-                    fat = 0.2f,
-                    fiber = 2.4f,
-                    sugar = 10.4f,
-                    servingSize = 100f,
-                    servingUnit = "g"
-                )
+            viewModel.addCustomFood(
+                name = "Pomme",
+                calories = 52,
+                protein = 0.3f,
+                carbs = 13.8f,
+                fat = 0.2f,
+                fiber = 2.4f,
+                sugar = 10.4f,
+                servingSize = 100f,
+                servingUnit = "g"
+            )
 
-                viewModel.addCustomFood(
-                    name = "Poulet (blanc)",
-                    calories = 165,
-                    protein = 31f,
-                    carbs = 0f,
-                    fat = 3.6f,
-                    fiber = 0f,
-                    sugar = 0f,
-                    servingSize = 100f,
-                    servingUnit = "g"
-                )
+            viewModel.addCustomFood(
+                name = "Poulet (blanc)",
+                calories = 165,
+                protein = 31f,
+                carbs = 0f,
+                fat = 3.6f,
+                fiber = 0f,
+                sugar = 0f,
+                servingSize = 100f,
+                servingUnit = "g"
+            )
 
-                Log.d(TAG, "Aliments de test ajoutés")
-            } catch (e: Exception) {
-                Log.e(TAG, "Erreur lors de l'ajout des aliments de test", e)
-            }
+            viewModel.addCustomFood(
+                name = "Riz complet",
+                calories = 123,
+                protein = 2.6f,
+                carbs = 23f,
+                fat = 0.9f,
+                fiber = 1.8f,
+                sugar = 0.4f,
+                servingSize = 100f,
+                servingUnit = "g"
+            )
+
+            viewModel.addCustomFood(
+                name = "Saumon",
+                calories = 208,
+                protein = 25.4f,
+                carbs = 0f,
+                fat = 12.4f,
+                fiber = 0f,
+                sugar = 0f,
+                servingSize = 100f,
+                servingUnit = "g"
+            )
+
+            Log.d(TAG, "Aliments de test ajoutés")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors de l'ajout des aliments de test", e)
         }
     }
 
@@ -146,9 +170,11 @@ class FoodSearchFragment : Fragment() {
                     if (it.length >= 2) {
                         // Recherche locale uniquement sur changement de texte
                         viewModel.searchFoods(it, false)
+                        isOnlineSearch = false
                     } else if (it.isEmpty()) {
                         // Réinitialiser à tous les aliments
                         viewModel.searchFoods("", false)
+                        isOnlineSearch = false
                     }
                 }
                 return true
@@ -162,14 +188,17 @@ class FoodSearchFragment : Fragment() {
                 when (tab?.position) {
                     0 -> {
                         Log.d(TAG, "Onglet 'Tous' sélectionné")
+                        isOnlineSearch = false
                         viewModel.searchFoods("", false) // Tous les aliments
                     }
                     1 -> {
                         Log.d(TAG, "Onglet 'Favoris' sélectionné")
+                        isOnlineSearch = false
                         displayFavoriteFoods()
                     }
                     2 -> {
                         Log.d(TAG, "Onglet 'Récents' sélectionné")
+                        isOnlineSearch = false
                         displayRecentFoods()
                     }
                 }
@@ -213,18 +242,22 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun displayFavoriteFoods() {
-        // Observer les aliments favoris
+        // Pour l'instant, filtrer côté UI - idéalement ajouter une méthode dans le ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.searchFoods("", false)
-            // TODO: Filtrer uniquement les favoris - à implémenter dans le ViewModel
+            viewModel.searchResults.collect { foods ->
+                val favoriteFoods = foods.filter { it.favorite }
+                updateFoodsList(favoriteFoods)
+            }
         }
     }
 
     private fun displayRecentFoods() {
-        // Observer les aliments récemment utilisés
+        // Pour l'instant, trier par lastUsed - idéalement ajouter une méthode dans le ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.searchFoods("", false)
-            // TODO: Filtrer uniquement les récents - à implémenter dans le ViewModel
+            viewModel.searchResults.collect { foods ->
+                val recentFoods = foods.sortedByDescending { it.lastUsed }.take(20)
+                updateFoodsList(recentFoods)
+            }
         }
     }
 
@@ -283,7 +316,9 @@ class FoodSearchFragment : Fragment() {
         // Observer la requête de recherche
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchQuery.collect { query ->
-                binding.searchView.setQuery(query, false)
+                if (binding.searchView.query.toString() != query) {
+                    binding.searchView.setQuery(query, false)
+                }
             }
         }
     }
