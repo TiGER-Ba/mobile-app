@@ -27,6 +27,10 @@ class MealPlanFragment : Fragment() {
     private val viewModel: MealPlanViewModel by viewModels()
     private lateinit var mealAdapter: MealAdapter
 
+    // CORRECTION: Variables pour limiter les toasts
+    private var lastToastTime = 0L
+    private var lastToastMessage = ""
+
     companion object {
         private const val TAG = "MealPlanFragment"
     }
@@ -59,7 +63,6 @@ class MealPlanFragment : Fragment() {
         Log.d(TAG, "🔧 onViewCreated() - Configuration de la vue")
 
         try {
-            // Initialisation des composants
             setupDateSelector()
             Log.d(TAG, "✅ Date selector configuré")
 
@@ -72,12 +75,10 @@ class MealPlanFragment : Fragment() {
             observeViewModel()
             Log.d(TAG, "✅ ViewModel observé")
 
-            // CORRECTION : Initialiser avec la date actuelle ET afficher immédiatement
+            // CORRECTION: Initialiser avec la date actuelle
             val currentDate = System.currentTimeMillis()
             Log.d(TAG, "📅 Initialisation avec la date: $currentDate")
             viewModel.selectDate(currentDate)
-
-            // Afficher immédiatement la date
             updateDateDisplay(currentDate)
 
             Log.d(TAG, "🎯 Configuration complète terminée")
@@ -126,7 +127,7 @@ class MealPlanFragment : Fragment() {
             datePicker.show(parentFragmentManager, "DATE_PICKER")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur ouverture date picker", e)
-            showErrorMessage("Impossible d'ouvrir le sélecteur de date")
+            showLimitedToast("Impossible d'ouvrir le sélecteur de date")
         }
     }
 
@@ -156,7 +157,7 @@ class MealPlanFragment : Fragment() {
                     findNavController().navigate(action)
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Erreur navigation vers détails repas", e)
-                    showErrorMessage("Impossible d'ouvrir les détails du repas")
+                    showLimitedToast("Impossible d'ouvrir les détails du repas")
                 }
             }
 
@@ -166,7 +167,7 @@ class MealPlanFragment : Fragment() {
                 Log.d(TAG, "✅ RecyclerView configuré")
             }
 
-            // Observer les repas
+            // Observer les repas avec meilleure gestion du cycle de vie
             viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.mealsForCurrentPlan.collect { meals ->
                     if (isAdded && !isDetached && _binding != null) {
@@ -189,7 +190,7 @@ class MealPlanFragment : Fragment() {
 
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erreur configuration liste repas", e)
-            showErrorMessage("Erreur lors de la configuration de la liste")
+            showLimitedToast("Erreur lors de la configuration de la liste")
         }
     }
 
@@ -202,7 +203,7 @@ class MealPlanFragment : Fragment() {
                     findNavController().navigate(action)
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Erreur navigation vers ajout repas", e)
-                    showErrorMessage("Impossible d'ouvrir l'ajout de repas")
+                    showLimitedToast("Impossible d'ouvrir l'ajout de repas")
                 }
             }
             Log.d(TAG, "✅ Bouton d'ajout configuré")
@@ -213,12 +214,12 @@ class MealPlanFragment : Fragment() {
 
     private fun observeViewModel() {
         try {
-            // Observer les messages
+            // CORRECTION: Observer les messages avec limitation stricte
             viewModel.message.observe(viewLifecycleOwner) { message ->
                 message?.let {
                     if (isAdded && !isDetached) {
                         Log.d(TAG, "💬 Message du ViewModel: $it")
-                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                        showLimitedToast(it)
                         viewModel.clearMessage()
                     }
                 }
@@ -237,10 +238,27 @@ class MealPlanFragment : Fragment() {
         }
     }
 
-    private fun showErrorMessage(message: String) {
-        if (isAdded && !isDetached) {
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    // CORRECTION: Méthode pour limiter strictement les toasts
+    private fun showLimitedToast(message: String) {
+        if (!isAdded || isDetached) return
+
+        try {
+            val currentTime = System.currentTimeMillis()
+            if (message != lastToastMessage || currentTime - lastToastTime > 3000) { // 3 secondes minimum
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                lastToastMessage = message
+                lastToastTime = currentTime
+                Log.d(TAG, "📢 Toast affiché: $message")
+            } else {
+                Log.d(TAG, "🚫 Toast ignoré (répétition): $message")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erreur affichage toast", e)
         }
+    }
+
+    private fun showErrorMessage(message: String) {
+        showLimitedToast(message)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -279,11 +297,7 @@ class MealPlanFragment : Fragment() {
                 .build()
 
             dateRangePicker.addOnPositiveButtonClickListener { dateRange ->
-                Toast.makeText(
-                    context,
-                    "Période sélectionnée: ${dateRange.first} à ${dateRange.second}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showLimitedToast("Période sélectionnée: ${dateRange.first} à ${dateRange.second}")
             }
 
             dateRangePicker.show(parentFragmentManager, "DATE_RANGE_PICKER")

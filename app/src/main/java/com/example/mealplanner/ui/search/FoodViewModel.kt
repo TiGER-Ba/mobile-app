@@ -1,5 +1,6 @@
 package com.example.mealplanner.ui.search
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,10 @@ class FoodViewModel @Inject constructor(
     private val foodRepository: FoodRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "FoodViewModel"
+    }
+
     // État de recherche
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -30,9 +35,11 @@ class FoodViewModel @Inject constructor(
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    // État de message (erreurs, succès)
+    // CORRECTION: État de message avec limitation des répétitions
     private val _message = MutableLiveData<String?>()
     val message: LiveData<String?> = _message
+    private var lastMessage: String? = null
+    private var lastMessageTime: Long = 0
 
     // Liste pour stocker les résultats de recherche en ligne temporaires
     private val _onlineSearchResults = MutableLiveData<List<Food>>()
@@ -41,7 +48,7 @@ class FoodViewModel @Inject constructor(
     fun searchFoods(query: String, searchOnline: Boolean = false) {
         _searchQuery.value = query
 
-        if (searchOnline) {
+        if (searchOnline && query.isNotEmpty()) {
             searchFoodsOnline(query)
         }
     }
@@ -50,27 +57,50 @@ class FoodViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                Log.d(TAG, "Recherche en ligne: $query")
+
                 val results = foodRepository.searchFoodsOnline(query)
                 _onlineSearchResults.value = results
 
                 if (results.isEmpty()) {
-                    _message.value = "Aucun résultat trouvé en ligne"
+                    showMessage("Aucun résultat trouvé en ligne")
+                } else {
+                    Log.d(TAG, "Trouvé ${results.size} résultats en ligne")
                 }
             } catch (e: Exception) {
-                _message.value = "Erreur lors de la recherche: ${e.message}"
+                Log.e(TAG, "Erreur lors de la recherche en ligne", e)
+                showMessage("Erreur lors de la recherche: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    // CORRECTION: Méthode pour éviter les messages répétés
+    private fun showMessage(newMessage: String) {
+        val currentTime = System.currentTimeMillis()
+        if (newMessage != lastMessage || currentTime - lastMessageTime > 3000) { // 3 secondes minimum
+            _message.value = newMessage
+            lastMessage = newMessage
+            lastMessageTime = currentTime
+        }
+    }
+
     fun clearMessage() {
         _message.value = null
+        lastMessage = null
+        lastMessageTime = 0
     }
 
     fun toggleFavorite(food: Food) {
         viewModelScope.launch {
-            foodRepository.toggleFavorite(food.id, !food.favorite)
+            try {
+                foodRepository.toggleFavorite(food.id, !food.favorite)
+                Log.d(TAG, "Statut favori modifié pour: ${food.name}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors de la modification du favori", e)
+                showMessage("Erreur lors de la modification")
+            }
         }
     }
 
@@ -88,7 +118,7 @@ class FoodViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val food = Food(
-                    id = name.replace(" ", "_").lowercase() + "_" + System.currentTimeMillis(),
+                    id = "custom_" + name.replace(" ", "_").lowercase() + "_" + System.currentTimeMillis(),
                     name = name,
                     calories = calories,
                     protein = protein,
@@ -103,13 +133,31 @@ class FoodViewModel @Inject constructor(
                 )
 
                 foodRepository.insertFood(food)
-                _message.value = "Aliment ajouté avec succès"
+                showMessage("Aliment ajouté avec succès")
+                Log.d(TAG, "Aliment personnalisé ajouté: ${food.name}")
             } catch (e: Exception) {
-                _message.value = "Erreur lors de l'ajout: ${e.message}"
+                Log.e(TAG, "Erreur lors de l'ajout de l'aliment", e)
+                showMessage("Erreur lors de l'ajout: ${e.message}")
             }
         }
     }
-    // Ajoutez ces méthodes dans FoodViewModel.kt
+
+    // CORRECTION: Méthode pour ajouter directement un aliment (pour les données de test)
+    suspend fun addCustomFoodDirect(food: Food) {
+        try {
+            // Vérifier si l'aliment existe déjà
+            val existingFood = foodRepository.getFoodById(food.id)
+            if (existingFood == null) {
+                foodRepository.insertFood(food)
+                Log.d(TAG, "Aliment de test ajouté: ${food.name}")
+            } else {
+                Log.d(TAG, "Aliment déjà présent: ${food.name}")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Erreur lors de l'ajout de l'aliment ${food.name}: ${e.message}")
+            // Ne pas afficher de toast pour les erreurs de données de test
+        }
+    }
 
     fun getFoodByIdLiveData(foodId: String): LiveData<Food?> {
         return foodRepository.getFoodByIdLiveData(foodId)
@@ -120,7 +168,12 @@ class FoodViewModel @Inject constructor(
 
     fun selectFood(foodId: String) {
         viewModelScope.launch {
-            _selectedFood.value = foodRepository.getFoodById(foodId)
+            try {
+                _selectedFood.value = foodRepository.getFoodById(foodId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur lors de la sélection de l'aliment", e)
+                showMessage("Erreur lors de la sélection")
+            }
         }
     }
 }

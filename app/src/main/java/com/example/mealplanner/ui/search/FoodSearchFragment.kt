@@ -1,5 +1,6 @@
 package com.example.mealplanner.ui.search
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,6 +19,7 @@ import com.example.mealplanner.databinding.FragmentFoodSearchBinding
 import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class FoodSearchFragment : Fragment() {
@@ -31,8 +33,13 @@ class FoodSearchFragment : Fragment() {
     // État de recherche pour savoir si on utilise la recherche locale ou en ligne
     private var isOnlineSearch = false
 
+    // CORRECTION: SharedPreferences pour éviter l'ajout répétitif de données de test
+    @Inject
+    lateinit var sharedPreferences: SharedPreferences
+
     companion object {
         private const val TAG = "FoodSearchFragment"
+        private const val PREF_TEST_DATA_ADDED = "test_data_added"
     }
 
     override fun onCreateView(
@@ -56,85 +63,107 @@ class FoodSearchFragment : Fragment() {
         setupAddFoodButton()
         observeViewModel()
 
-        // Charger les données initiales
+        // CORRECTION: Charger les données initiales seulement si nécessaire
         loadInitialData()
     }
 
     private fun loadInitialData() {
         Log.d(TAG, "Chargement des données initiales")
 
-        // Ajouter des aliments de test si la base est vide
+        // CORRECTION: Vérifier si les données de test ont déjà été ajoutées
         viewLifecycleOwner.lifecycleScope.launch {
-            addTestFoodsIfEmpty()
-            // Charger tous les aliments après avoir ajouté les données de test
+            val testDataAdded = sharedPreferences.getBoolean(PREF_TEST_DATA_ADDED, false)
+            if (!testDataAdded) {
+                addTestFoodsIfEmpty()
+                sharedPreferences.edit().putBoolean(PREF_TEST_DATA_ADDED, true).apply()
+                Log.d(TAG, "Données de test ajoutées pour la première fois")
+            } else {
+                Log.d(TAG, "Données de test déjà présentes, pas d'ajout")
+            }
+
+            // Charger tous les aliments
             viewModel.searchFoods("", false)
         }
     }
 
     private suspend fun addTestFoodsIfEmpty() {
         try {
-            // Ajouter des aliments de test pour avoir quelque chose à afficher
-            viewModel.addCustomFood(
-                name = "Banane",
-                calories = 89,
-                protein = 1.1f,
-                carbs = 22.8f,
-                fat = 0.3f,
-                fiber = 2.6f,
-                sugar = 12.2f,
-                servingSize = 100f,
-                servingUnit = "g"
+            // CORRECTION: Ajouter des données de test seulement si elles n'existent pas déjà
+            Log.d(TAG, "Ajout des aliments de test")
+
+            val testFoods = listOf(
+                Food(
+                    id = "test_banana",
+                    name = "Banane",
+                    calories = 89,
+                    protein = 1.1f,
+                    carbs = 22.8f,
+                    fat = 0.3f,
+                    fiber = 2.6f,
+                    sugar = 12.2f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                ),
+                Food(
+                    id = "test_apple",
+                    name = "Pomme",
+                    calories = 52,
+                    protein = 0.3f,
+                    carbs = 13.8f,
+                    fat = 0.2f,
+                    fiber = 2.4f,
+                    sugar = 10.4f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                ),
+                Food(
+                    id = "test_chicken",
+                    name = "Poulet (blanc)",
+                    calories = 165,
+                    protein = 31f,
+                    carbs = 0f,
+                    fat = 3.6f,
+                    fiber = 0f,
+                    sugar = 0f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                ),
+                Food(
+                    id = "test_rice",
+                    name = "Riz complet",
+                    calories = 123,
+                    protein = 2.6f,
+                    carbs = 23f,
+                    fat = 0.9f,
+                    fiber = 1.8f,
+                    sugar = 0.4f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                ),
+                Food(
+                    id = "test_salmon",
+                    name = "Saumon",
+                    calories = 208,
+                    protein = 25.4f,
+                    carbs = 0f,
+                    fat = 12.4f,
+                    fiber = 0f,
+                    sugar = 0f,
+                    servingSize = 100f,
+                    servingUnit = "g"
+                )
             )
 
-            viewModel.addCustomFood(
-                name = "Pomme",
-                calories = 52,
-                protein = 0.3f,
-                carbs = 13.8f,
-                fat = 0.2f,
-                fiber = 2.4f,
-                sugar = 10.4f,
-                servingSize = 100f,
-                servingUnit = "g"
-            )
+            // Ajouter chaque aliment individuellement pour éviter les doublons
+            testFoods.forEach { food ->
+                try {
+                    viewModel.addCustomFoodDirect(food)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Aliment ${food.name} déjà présent ou erreur: ${e.message}")
+                }
+            }
 
-            viewModel.addCustomFood(
-                name = "Poulet (blanc)",
-                calories = 165,
-                protein = 31f,
-                carbs = 0f,
-                fat = 3.6f,
-                fiber = 0f,
-                sugar = 0f,
-                servingSize = 100f,
-                servingUnit = "g"
-            )
-
-            viewModel.addCustomFood(
-                name = "Riz complet",
-                calories = 123,
-                protein = 2.6f,
-                carbs = 23f,
-                fat = 0.9f,
-                fiber = 1.8f,
-                sugar = 0.4f,
-                servingSize = 100f,
-                servingUnit = "g"
-            )
-
-            viewModel.addCustomFood(
-                name = "Saumon",
-                calories = 208,
-                protein = 25.4f,
-                carbs = 0f,
-                fat = 12.4f,
-                fiber = 0f,
-                sugar = 0f,
-                servingSize = 100f,
-                servingUnit = "g"
-            )
-
-            Log.d(TAG, "Aliments de test ajoutés")
+            Log.d(TAG, "Aliments de test traités")
         } catch (e: Exception) {
             Log.e(TAG, "Erreur lors de l'ajout des aliments de test", e)
         }
@@ -168,11 +197,9 @@ class FoodSearchFragment : Fragment() {
             override fun onQueryTextChange(newText: String?): Boolean {
                 newText?.let {
                     if (it.length >= 2) {
-                        // Recherche locale uniquement sur changement de texte
                         viewModel.searchFoods(it, false)
                         isOnlineSearch = false
                     } else if (it.isEmpty()) {
-                        // Réinitialiser à tous les aliments
                         viewModel.searchFoods("", false)
                         isOnlineSearch = false
                     }
@@ -189,7 +216,7 @@ class FoodSearchFragment : Fragment() {
                     0 -> {
                         Log.d(TAG, "Onglet 'Tous' sélectionné")
                         isOnlineSearch = false
-                        viewModel.searchFoods("", false) // Tous les aliments
+                        viewModel.searchFoods("", false)
                     }
                     1 -> {
                         Log.d(TAG, "Onglet 'Favoris' sélectionné")
@@ -205,7 +232,6 @@ class FoodSearchFragment : Fragment() {
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
-
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
     }
@@ -237,12 +263,11 @@ class FoodSearchFragment : Fragment() {
         if (query.isNotEmpty()) {
             viewModel.searchFoods(query, isOnlineSearch)
         } else {
-            viewModel.searchFoods("", false) // Afficher tous les aliments
+            viewModel.searchFoods("", false)
         }
     }
 
     private fun displayFavoriteFoods() {
-        // CORRECTION : Meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
                 if (isAdded && !isDetached) {
@@ -254,7 +279,6 @@ class FoodSearchFragment : Fragment() {
     }
 
     private fun displayRecentFoods() {
-        // CORRECTION : Meilleure gestion du cycle de vie
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.searchResults.collect { foods ->
                 if (isAdded && !isDetached) {
@@ -271,7 +295,7 @@ class FoodSearchFragment : Fragment() {
             findNavController().navigate(action)
         } catch (e: Exception) {
             Log.e(TAG, "Erreur navigation vers détails", e)
-            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+            showToast("Erreur de navigation")
         }
     }
 
@@ -281,7 +305,7 @@ class FoodSearchFragment : Fragment() {
             findNavController().navigate(action)
         } catch (e: Exception) {
             Log.e(TAG, "Erreur navigation vers ajout", e)
-            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+            showToast("Erreur de navigation")
         }
     }
 
@@ -293,12 +317,17 @@ class FoodSearchFragment : Fragment() {
             }
         }
 
-        // Observer les messages d'erreur ou de succès
+        // Observer les messages d'erreur ou de succès avec limitation
+        var lastToastTime = 0L
         viewModel.message.observe(viewLifecycleOwner) { message ->
             message?.let {
                 if (isAdded && !isDetached) {
-                    Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                    viewModel.clearMessage()
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastToastTime > 2000) { // Minimum 2 secondes entre les toasts
+                        showToast(it)
+                        lastToastTime = currentTime
+                        viewModel.clearMessage()
+                    }
                 }
             }
         }
@@ -347,6 +376,15 @@ class FoodSearchFragment : Fragment() {
         } else {
             binding.textViewNoResults.visibility = View.GONE
             binding.recyclerViewFoods.visibility = View.VISIBLE
+        }
+    }
+
+    // CORRECTION: Méthode centralisée pour les toasts avec limitation
+    private fun showToast(message: String) {
+        try {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors de l'affichage du toast", e)
         }
     }
 
