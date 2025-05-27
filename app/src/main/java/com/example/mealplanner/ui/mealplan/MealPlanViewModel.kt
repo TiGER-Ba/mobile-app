@@ -15,12 +15,10 @@ import com.example.mealplanner.data.repository.FoodRepository
 import com.example.mealplanner.data.repository.MealPlanRepository
 import com.example.mealplanner.data.repository.RecipeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -345,7 +343,7 @@ class MealPlanViewModel @Inject constructor(
     // CORRECTION: Méthode pour éviter les messages répétés
     private fun showMessage(newMessage: String) {
         val currentTime = System.currentTimeMillis()
-        if (newMessage != lastMessage || currentTime - lastMessageTime > 3000) { // 3 secondes minimum entre les mêmes messages
+        if (newMessage != lastMessage || currentTime - lastMessageTime > 3000) {
             _message.value = newMessage
             lastMessage = newMessage
             lastMessageTime = currentTime
@@ -363,8 +361,18 @@ class MealPlanViewModel @Inject constructor(
         return (food.calories * servingRatio).toInt()
     }
 
+    // CORRECTION: Calcul amélioré des calories de recette
     private fun calculateRecipeCalories(recipe: Recipe, servings: Float): Int {
-        return (500 * servings).toInt() // Placeholder: 500 kcal par portion
+        val baseCaloriesPerServing = when {
+            recipe.tags.contains("petit-déjeuner") -> 350
+            recipe.tags.contains("salade") -> 250
+            recipe.tags.contains("protéine") || recipe.tags.contains("viande") -> 450
+            recipe.tags.contains("végétarien") -> 300
+            recipe.cookingTime > 30 -> 500
+            else -> 400
+        }
+
+        return (baseCaloriesPerServing * servings).toInt()
     }
 }
 

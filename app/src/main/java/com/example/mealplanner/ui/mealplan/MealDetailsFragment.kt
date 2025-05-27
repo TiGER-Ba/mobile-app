@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -56,11 +55,9 @@ class MealDetailsFragment : Fragment() {
     private fun setupFoodsList() {
         mealItemAdapter = MealItemAdapter(
             onItemClick = { mealItemDetails ->
-                // Afficher les détails ou permettre la modification
                 showEditQuantityDialog(mealItemDetails)
             },
             onDeleteClick = { mealItemDetails ->
-                // Confirmation de suppression
                 showDeleteConfirmationDialog(mealItemDetails)
             }
         )
@@ -80,6 +77,7 @@ class MealDetailsFragment : Fragment() {
             showDeleteMealConfirmationDialog()
         }
 
+        // CORRECTION: Navigation améliorée vers la recherche d'aliments/recettes
         binding.fabAddFood.setOnClickListener {
             showAddFoodOptionsDialog()
         }
@@ -88,7 +86,7 @@ class MealDetailsFragment : Fragment() {
     private fun loadMealDetails() {
         viewModel.selectMeal(args.mealId)
 
-        // Observer le repas sélectionné avec meilleure gestion du cycle de vie
+        // Observer le repas sélectionné
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.mealsForCurrentPlan.collect { meals ->
                 if (isAdded && !isDetached) {
@@ -101,20 +99,18 @@ class MealDetailsFragment : Fragment() {
             }
         }
 
-        // Observer les éléments du repas avec meilleure gestion du cycle de vie
+        // Observer les éléments du repas
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.mealItems.collect { items ->
                 if (isAdded && !isDetached) {
                     mealItemAdapter.submitList(items)
 
-                    // Afficher un message si aucun aliment n'est ajouté
                     if (items.isEmpty()) {
                         binding.textViewNoFoods.visibility = View.VISIBLE
                     } else {
                         binding.textViewNoFoods.visibility = View.GONE
                     }
 
-                    // Calculer les macronutriments totaux
                     updateNutritionInfo(items)
                 }
             }
@@ -124,12 +120,10 @@ class MealDetailsFragment : Fragment() {
     private fun updateUI(meal: Meal) {
         if (!isAdded || isDetached) return
 
-        // Formater l'heure du repas
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeString = timeFormat.format(Date(meal.time))
         binding.textViewTime.text = timeString
 
-        // Afficher le type de repas
         val mealTypeText = when (meal.type) {
             MealType.BREAKFAST -> getString(R.string.meal_type_breakfast)
             MealType.LUNCH -> getString(R.string.meal_type_lunch)
@@ -138,7 +132,6 @@ class MealDetailsFragment : Fragment() {
         }
         binding.textViewType.text = mealTypeText
 
-        // Afficher le nom et les notes s'ils existent
         if (meal.name.isNotEmpty()) {
             binding.textViewName.text = meal.name
             binding.textViewName.visibility = View.VISIBLE
@@ -162,11 +155,9 @@ class MealDetailsFragment : Fragment() {
         var totalCarbs = 0f
         var totalFat = 0f
 
-        // Calculer les totaux
         items.forEach { itemDetails ->
             totalCalories += itemDetails.calories
 
-            // Calculer les macronutriments à partir des aliments (pas des recettes pour le moment)
             itemDetails.food?.let { food ->
                 val servingRatio = itemDetails.item.quantity * itemDetails.item.servingSize / 100f
                 totalProtein += food.protein * servingRatio
@@ -175,7 +166,6 @@ class MealDetailsFragment : Fragment() {
             }
         }
 
-        // Afficher les valeurs
         binding.textViewCalories.text = "$totalCalories kcal"
         binding.textViewProtein.text = "${totalProtein.toInt()}g"
         binding.textViewCarbs.text = "${totalCarbs.toInt()}g"
@@ -184,8 +174,6 @@ class MealDetailsFragment : Fragment() {
 
     private fun showEditMealDialog() {
         currentMeal?.let { meal ->
-            // Ici, on pourrait ouvrir un fragment ou une activité pour éditer le repas
-            // Pour simplifier, on utilise une boîte de dialogue
             Toast.makeText(context, "Fonctionnalité d'édition à implémenter", Toast.LENGTH_SHORT).show()
         }
     }
@@ -205,6 +193,7 @@ class MealDetailsFragment : Fragment() {
         }
     }
 
+    // CORRECTION: Options d'ajout améliorées
     private fun showAddFoodOptionsDialog() {
         if (!isAdded || isDetached) return
 
@@ -221,19 +210,45 @@ class MealDetailsFragment : Fragment() {
             .show()
     }
 
+    // CORRECTION: Navigation vers la recherche d'aliments
     private fun navigateToFoodSearch() {
-        // Navigation vers la recherche d'aliments
-        Toast.makeText(context, "Navigation vers recherche d'aliments à implémenter", Toast.LENGTH_SHORT).show()
+        try {
+            val action = MealDetailsFragmentDirections.actionMealDetailsToFoodSearch()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+        }
     }
 
+    // CORRECTION: Navigation vers la recherche de recettes
     private fun navigateToRecipeSearch() {
-        // Navigation vers la recherche de recettes
-        Toast.makeText(context, "Navigation vers recherche de recettes à implémenter", Toast.LENGTH_SHORT).show()
+        try {
+            val action = MealDetailsFragmentDirections.actionMealDetailsToRecipeSearch()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showEditQuantityDialog(mealItemDetails: MealItemDetails) {
-        // Ici, on pourrait ouvrir un dialogue pour modifier la quantité
-        Toast.makeText(context, "Modification de quantité à implémenter", Toast.LENGTH_SHORT).show()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_quantity_selector, null)
+        val editTextQuantity = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.editTextQuantity)
+        val editTextServingSize = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.editTextServingSize)
+
+        editTextQuantity.setText(mealItemDetails.item.quantity.toString())
+        editTextServingSize.setText(mealItemDetails.item.servingSize.toString())
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Modifier la quantité")
+            .setView(dialogView)
+            .setPositiveButton("Modifier") { _, _ ->
+                val quantity = editTextQuantity.text.toString().toFloatOrNull() ?: mealItemDetails.item.quantity
+                val servingSize = editTextServingSize.text.toString().toFloatOrNull() ?: mealItemDetails.item.servingSize
+
+                viewModel.updateMealItem(mealItemDetails.item, quantity, servingSize)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
     }
 
     private fun showDeleteConfirmationDialog(mealItemDetails: MealItemDetails) {
@@ -255,7 +270,6 @@ class MealDetailsFragment : Fragment() {
                 if (isAdded && !isDetached) {
                     Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
 
-                    // Si le repas a été supprimé, revenir en arrière
                     if (it.contains("supprimé", ignoreCase = true) && it.contains("repas", ignoreCase = true)) {
                         findNavController().navigateUp()
                     }

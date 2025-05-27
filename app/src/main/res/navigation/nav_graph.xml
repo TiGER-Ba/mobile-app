@@ -12,12 +12,10 @@
         android:label="@string/title_meal_plan"
         tools:layout="@layout/fragment_meal_plan">
 
-        <!-- Action vers les détails d'un repas -->
         <action
             android:id="@+id/actionMealPlanToMealDetails"
             app:destination="@id/navigation_meal_details" />
 
-        <!-- Action vers l'ajout d'un repas -->
         <action
             android:id="@+id/actionMealPlanToAddMeal"
             app:destination="@id/navigation_add_meal" />
@@ -30,12 +28,10 @@
         android:label="@string/title_food_search"
         tools:layout="@layout/fragment_food_search">
 
-        <!-- Action vers les détails d'un aliment -->
         <action
             android:id="@+id/actionFoodSearchToFoodDetails"
             app:destination="@id/navigation_food_details" />
 
-        <!-- Action vers l'ajout d'un aliment -->
         <action
             android:id="@+id/actionFoodSearchToAddFood"
             app:destination="@id/navigation_add_food" />
@@ -48,12 +44,10 @@
         android:label="@string/title_recipes"
         tools:layout="@layout/fragment_recipes">
 
-        <!-- Action vers les détails d'une recette -->
         <action
             android:id="@+id/actionRecipesToRecipeDetails"
             app:destination="@id/navigation_recipe_details" />
 
-        <!-- Action vers l'ajout d'une recette -->
         <action
             android:id="@+id/actionRecipesToAddRecipe"
             app:destination="@id/navigation_add_recipe" />
@@ -83,6 +77,10 @@
         <argument
             android:name="foodId"
             app:argType="string" />
+
+        <action
+            android:id="@+id/actionFoodDetailsToAddToMeal"
+            app:destination="@id/navigation_add_food_to_meal" />
     </fragment>
 
     <!-- Fragment : Ajouter un aliment -->
@@ -103,10 +101,13 @@
             android:name="recipeId"
             app:argType="string" />
 
-        <!-- Action vers l'édition de la recette -->
         <action
             android:id="@+id/actionRecipeDetailsToEditRecipe"
             app:destination="@id/navigation_add_recipe" />
+
+        <action
+            android:id="@+id/actionRecipeDetailsToAddToMeal"
+            app:destination="@id/navigation_add_recipe_to_meal" />
     </fragment>
 
     <!-- Fragment : Ajouter/Éditer une recette -->
@@ -144,6 +145,38 @@
 
         <argument
             android:name="mealId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/actionMealDetailsToFoodSearch"
+            app:destination="@id/navigation_food_search" />
+
+        <action
+            android:id="@+id/actionMealDetailsToRecipeSearch"
+            app:destination="@id/navigation_recipes" />
+    </fragment>
+
+    <!-- NOUVEAU: Fragment pour ajouter un aliment à un repas -->
+    <fragment
+        android:id="@+id/navigation_add_food_to_meal"
+        android:name="com.example.mealplanner.ui.mealplan.AddFoodToMealFragment"
+        android:label="Ajouter à un repas"
+        tools:layout="@layout/fragment_add_food_to_meal">
+
+        <argument
+            android:name="foodId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- NOUVEAU: Fragment pour ajouter une recette à un repas -->
+    <fragment
+        android:id="@+id/navigation_add_recipe_to_meal"
+        android:name="com.example.mealplanner.ui.mealplan.AddRecipeToMealFragment"
+        android:label="Ajouter à un repas"
+        tools:layout="@layout/fragment_add_recipe_to_meal">
+
+        <argument
+            android:name="recipeId"
             app:argType="string" />
     </fragment>
 

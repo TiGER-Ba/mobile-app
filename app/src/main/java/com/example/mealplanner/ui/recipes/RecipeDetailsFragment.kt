@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -57,9 +56,12 @@ class RecipeDetailsFragment : Fragment() {
 
     private fun setupButtons() {
         binding.buttonEditRecipe.setOnClickListener {
-            // CORRECTION : Utilisation de l'action de navigation correcte
-            val action = RecipeDetailsFragmentDirections.actionRecipeDetailsToEditRecipe(args.recipeId)
-            findNavController().navigate(action)
+            try {
+                val action = RecipeDetailsFragmentDirections.actionRecipeDetailsToEditRecipe(args.recipeId)
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.buttonDeleteRecipe.setOnClickListener {
@@ -67,12 +69,20 @@ class RecipeDetailsFragment : Fragment() {
         }
 
         binding.buttonFavorite.setOnClickListener {
-            // Toggle favorite status will be handled by observing recipe changes
+            // Le toggle favorite sera géré par l'observation des changements de recette
+            viewModel.getRecipeDetails(args.recipeId).value?.let { recipeWithIngredients ->
+                viewModel.toggleFavorite(recipeWithIngredients.recipe.id, !recipeWithIngredients.recipe.favorite)
+            }
         }
 
+        // CORRECTION: Navigation vers l'ajout à un repas
         binding.buttonAddToMeal.setOnClickListener {
-            Toast.makeText(context, "Fonctionnalité à implémenter", Toast.LENGTH_SHORT).show()
-            // Ici vous pourriez naviguer vers un écran de sélection de repas
+            try {
+                val action = RecipeDetailsFragmentDirections.actionRecipeDetailsToAddToMeal(args.recipeId)
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

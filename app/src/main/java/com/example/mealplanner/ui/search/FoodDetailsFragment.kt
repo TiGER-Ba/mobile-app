@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.mealplanner.R
@@ -80,9 +81,14 @@ class FoodDetailsFragment : Fragment() {
             }
         }
 
+        // CORRECTION: Navigation vers l'ajout à un repas
         binding.buttonAddToMeal.setOnClickListener {
-            Toast.makeText(context, "Fonctionnalité à implémenter", Toast.LENGTH_SHORT).show()
-            // Ici, vous pourriez naviguer vers un écran de sélection de repas
+            try {
+                val action = FoodDetailsFragmentDirections.actionFoodDetailsToAddToMeal(args.foodId)
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Erreur de navigation", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
